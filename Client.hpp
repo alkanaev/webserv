@@ -16,8 +16,9 @@
 
 # define CLIENT_BUFFER_SIZE 4092
 # define CLIENT_TIMEOUT 60
-# define RESPONSE "HTTP/1.1 200 OK\r\n\r\n Hello Weeb World :D!!"
+# define RESPONSE "HTTP/1.1 200 OK\r\n\r\n Hello Weeb World :D!!" /* juste proof of work */
 
+/* minimal Client class... */
 class Client
 {
 	private:
@@ -32,8 +33,6 @@ class Client
 		struct timeval		_ping;
 		socklen_t			_addrln;
 		int					_fd;
-
-		//		std::string			_ip;
 
 	public:
 		enum READ_STATUS {

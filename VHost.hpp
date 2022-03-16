@@ -17,6 +17,7 @@
 
 # define MAX_CONNS 4092
 
+/* socket */
 class VHost: public serverBlock
 {
 	private:

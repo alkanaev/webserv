@@ -11,16 +11,18 @@
 # include <iostream>
 # include "unistd.h"
 
-class serverBlock
+/* This par is tmp, it depend of the parsing... here jute de minimal things */
+
+class serverBlock /* for server {} ngix */
 {
 	protected:
 		/* private data */
-		std::string const 	_host;
-		std::string const 	_name;
-		std::string const 	_root;
-		int					_port;
+		std::string const 	_host; /* ip */
+		std::string const 	_name; /* host name */
+		std::string const 	_root; /* root dir */
+		int					_port; /* lisening port */
 	private:
-		char buff[1000];
+		char buff[1000]; /* ugly tmp */
 
 	public:
 		/* constructors */
