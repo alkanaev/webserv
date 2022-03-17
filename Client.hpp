@@ -8,6 +8,7 @@
 # define CLIENT_HPP
 
 # include "serverBlock.hpp"
+# include "enum.hpp"
 #include <fcntl.h>
 # include <sys/socket.h>
 # include <sys/time.h>
@@ -26,20 +27,22 @@ class Client
 		serverBlock			*_serv;
 
 		/* need to implement this class */
-		//request
 		//response
 		/* ----- */
+//		Request				*_request;
 		struct sockaddr_in	_addr;
 		struct timeval		_ping;
 		socklen_t			_addrln;
 		int					_fd;
 
 	public:
+		/*
 		enum READ_STATUS {
 			READ_ERROR = 0,
 			READ_EOF,
 			READ_OK
 		};
+		*/
 
 		/* constructor */
 		Client ( serverBlock *serv, int ev_fd ):
@@ -63,7 +66,12 @@ class Client
 		~Client () {
 			if (_fd != -1)
 				close(_fd);
+			/*
+			if (_request)
+				delete _request;
+			*/
 		}
+
 
 		/* getter */
 		int		get_fd() const { return _fd; }
@@ -72,7 +80,7 @@ class Client
 		}
 
 		/* tmp */
-		int	read_request() {
+		READ_STATUS	read_request() {
 			static char buffer[CLIENT_BUFFER_SIZE + 1];
 
 			ssize_t n = recv(_fd, buffer, CLIENT_BUFFER_SIZE, 0);
@@ -81,11 +89,20 @@ class Client
 				return (READ_ERROR);
 			} else if (!n)
 				return (READ_EOF);
-			else {
-				std::cout << "Readed: \n\r" << buffer << "\n\r" << "from: "
-					<< get_ip() << " client\n";
-				return (READ_OK);
+/*			else {
+				if (!_request) {
+					_request = new Request(buffer);
+					//change ping time
+				} else {
+					_request->parse_buffer(buffer);
+				}
+				*/
+			std::cout << "\n" << buffer << "\n";
+				return (_read_status());
 			}
+
+		READ_STATUS	_read_status() {
+			return (READ_OK);
 		}
 
 		/* tmp */

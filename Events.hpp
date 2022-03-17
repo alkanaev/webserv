@@ -156,7 +156,9 @@ class Events
 	void	_handle_stdin() {
 		static std::string line;
 
-			std::getline(std::cin, line);
+			if (!std::getline(std::cin, line)) {
+				_on = false; return ;
+			}
 			if (line == "quit" || line == "exit") {
 				_on = false;
 				std::cout << "[🔑] shutting down...\n";
