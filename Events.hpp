@@ -204,7 +204,7 @@ class Events
 
 		Client	*client = it->second;
 		int ret = client->read_request();
-		if (ret == Client::READ_EOF || ret == Client::READ_ERROR) //not the best way to handel EOF
+		if (ret == READ_EOF || ret == READ_ERROR) //not the best way to handel EOF
 			return _delete_client(ev_fd, client);
 		_ev_switchState(ev_fd, 1);
 	}

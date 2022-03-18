@@ -18,7 +18,7 @@ enum METHODS {
 	   _OPTIONS, // Describe the communication options for the target ressource
 	   _TRACE, // Performs a messge loop back test along with the path to the target ressource
 	   */
-	_UNKNOWN /* undefin|default method */
+	METHOD_UNKNOWN /* undefin|default method */
 };
 
 enum READ {
@@ -31,7 +31,7 @@ enum READ {
 enum FORM {
 	_URLENCODED,
 	_MULTIPART,
-	_UNKNOWN
+	FROM_UNKNOWN
 };
 
 enum STATUS_CODE {
