@@ -63,6 +63,7 @@ class Client
 				}
 				gettimeofday(&_ping, NULL);
 			}
+
 		/* destructor */
 		~Client () {
 			if (_fd != -1)
@@ -70,7 +71,6 @@ class Client
 			if (_request)
 				delete _request;
 		}
-
 
 		/* getter */
 		int		get_fd() const { return _fd; }
@@ -92,26 +92,11 @@ class Client
 				if (!_request) {
 					_request = new Request(buffer);
 					//change ping time
-				} else {
+				} else 
 					_request->add_buffer(buffer);
-				}
 			//std::cout << "\n" << buffer << "\n";
 				return (_read_status());
 			}
-		}
-
-		READ	_read_status() {
-			bool is_init = request->is_init();
-			if (!is_init) {
-				if (!request->everything_read()) // mmmm
-					return (READ_WAIT);
-				else
-					if (!request->init())
-						return (READ_OK);
-			}
-			if (request->get_method() == _POST && !request->read_body())
-				return (READ_WAIT);
-			return (READ_OK);
 		}
 
 		/* tmp */
@@ -131,11 +116,22 @@ class Client
 
 			private: 
 		/* private functions */
+		READ	_read_status() {
+			if (!request->header_ready()) {
+				if (!request->have_read_enought())
+					return (READ_WAIT);
+				else
+					if (!request->read_header())
+						return (READ_OK);
+			}
+			if (request->get_method() == _POST && !request->read_body())
+				return (READ_WAIT);
+			return (READ_OK);
+		}
+
 		std::string const get_ip() {
 			getpeername(_fd, (struct sockaddr *)&_addr, &_addrln);
 			return (inet_ntoa(_addr.sin_addr));
 		}
-		};
 
 #endif /* end of include guard CLIENT_HPP */
-

@@ -10,8 +10,9 @@
 # include "enum.hpp"
 
 # include <unnordered_map>
+# include <string>
 
-# define IS_INIT 1
+# define HEADER_READY 1
 # define BODY_READY 2
 # define CHUNKED 4
 # define CLOSED 8
@@ -63,9 +64,10 @@ class Request
 //		std::string	_version; /* always http 1.1 should I keep it ? (no) */
 		std::string	_query;
 		size_t		_separator_pos; /* only use for init.... move it there */
-		STATUS_CODE	_code
+		size_t		_body_size; /*not sur I need it */
+		STATUS_CODE	_code /* use for response */
 		METHODS		_method;
-		FORM		_form;
+		FORM		_form; /* use for response */
 		uint8_t		_status; /* bits info */
 
 	public:
@@ -77,6 +79,7 @@ class Request
 		_uri(),
 //		_version(),
 		_query()
+		_body_size(0),
 		_code(_OK),
 		_method(METHOD_UNKNOWN),
 		_form(FORM_UNKNOWN),
@@ -90,14 +93,14 @@ class Request
 		std::string const &get_uri() { return _uri; }
 		std::string const &get_query() { return _query; }
 		std::string const &get_host() { return _host; }
-		bool	get_header_status() { return ((_status & IS_INIT)); } /* init success */
-
+		bool	header_ready() { return ((_status & HEADER_READY)); } /* init success */
+		bool	have_read_enought() { return (_raw.fin("\r\n\r\n") != std::string::npos); }
 		/* methods */
 		void	add_buffer( std::string const &buffer ) {
 			_raw += buffer;
 		}
 
-		bool	init() {
+		bool	read_header() {
 			if (!_extract_method())
 				return (false);
 			if (!_extract_uri())
@@ -106,10 +109,11 @@ class Request
 				return (false);
 			if (!_extract_headers(&_headers))
 				return (false);
+			if (!_validate_host())
+				return (false);
 			if (_method == _POST && _validate_post() == false)
 				return false;
-			//_raw.erase(0, 2);
-			_status |= IS_INIT;
+			_status |= HEADER_READY;
 			return (true);
 		}
 
@@ -117,11 +121,12 @@ class Request
 		if (_status & CHUNKED) {
 			if (_read_chunks() == READ_WAIT)
 				return (false);
-			_body_size = _raw_request.size();
+			_body_size = _raw.size();
 			_status &= ˜CHUNKED;
+			_status |= BODY_READY; // ?
 			retun (true);
 		}
-		if (_raw.size() < _body_size)
+		if (_raw.size() < _body_size) // error
 			return (false);
 		_status |= BODY_READY;
 		return (true);
@@ -177,7 +182,7 @@ class Request
 		   return (_OPTIONS);
 		   if (m == "TRACE")
 		   return (_TRACE);
-		   */
+		*/
 		return (_UNKNOWN);
 	}
 
@@ -190,7 +195,7 @@ class Request
 
 		_method = _get_method(_raw_request.substr(0, separator_pos));
 
-		/*uptade _raw */
+		/* uptade _raw */
 		//		_raw_request.erase(0, separator_pos + 1); //could be done faster with handwriten buffer
 		++_separator_pos;
 
@@ -332,44 +337,40 @@ class Request
 		}
 	}
 
-	/*
-	   bool	_validate_host() {
-	   HeadersObject::const_iterator it = _headers.find("host");
-	   if (it == _headers.end() || it->second == "") {
-	   return _invalid_request(BAD_REQUEST);
-	   }
-	   return true;
-	   }
+	bool	_validate_host() {
+		Headers::const_iterator it = _headers.find("host");
+		if (it == _headers.end() || it->second == "") {
+			return _invalid(BAD_REQUEST);
+		}
+		return (true);
+	}
 
-	   bool	_validate_post() {
-	   HeadersObject::const_iterator it = _headers.find("transfer-encoding");
-	   if (it != _headers.end() &&
-	   it->second.find("chunked") != std::string::npos) {
-	   _chunked = true;
-	   } else {
-	   it = _headers.find("content-length");
-	   if (it == _headers.end() || it->second == "")
-	   return _invalid_request(BAD_REQUEST);
-	   _body_size = static_cast<size_t>(strtol(it->second.c_str(), NULL, 10));
-	   }
-	   it = _headers.find("content-type");
-	   if (it == _headers.end() || it->second == "")
-	   return _invalid_request(BAD_REQUEST);
-	   if (it->second == "application/x-www-form-urlencoded")
-	   _post_form = _URLENCODED;
-	   else if (it->second == "multipart/form-data")
-	   _post_form = _MULTIPART;
-	   return true;
-	   }
-	   */
+	/* for POST method */
+	bool	_validate_post() {
+		Headers::const_iterator it = _headers.find("transfer-encoding");
+		if (it != _headers.end() &&
+				it->second.find("chunked") != std::string::npos) {
+			_status |= CHUNKED; //chunked mod on
+		} else { /* normal mod */
+			it = _headers.find("content-length");
+			if (it == _headers.end() || it->second == "")
+				return (_invalid(BAD_REQUEST));
+			_body_size = static_cast<size_t>(strtol(it->second.c_str(), NULL, 10));
+		}
+		it = _headers.find("content-type");
+		if (it == _headers.end() || it->second == "")
+			return (_invalid_(BAD_REQUEST));
+		if (it->second == "application/x-www-form-urlencoded")
+			_post_form = _URLENCODED;
+		else if (it->second == "multipart/form-data")
+			_post_form = _MULTIPART;
+		return (true);
+	}
 
 	bool	_invalid_request(STATUS_CODE http_code) {
 		_code = http_code;
 		_status |= CLOSED;
 		return (false);
 	}
-
 };
-
 #endif /* end of include guard REQUEST_HPP */
-
