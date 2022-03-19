@@ -9,7 +9,7 @@
 
 # include "enum.hpp"
 
-# include <unnordered_map>
+# include <unordered_map>
 # include <string>
 
 # define HEADER_READY 1
@@ -58,15 +58,15 @@ class Request
 	private:
 		/* private data */
 		Headers		_headers;
-		std::string	_raw; /* request data to parse */.
+		std::string	_raw; /* request data to parse */
 		std::string	_host;
 		std::string	_uri; /* Uniform Resource Identifier */
 //		std::string	_version; /* always http 1.1 should I keep it ? (no) */
 		std::string	_query;
 		size_t		_separator_pos; /* only use for init.... move it there */
 		size_t		_body_size; /*not sur I need it */
-		STATUS_CODE	_code /* use for response */
-		METHODS		_method;
+		STATUS_CODE	_code; /* use for response */
+		METHODS		_method; /* GET POST DELET */
 		FORM		_form; /* use for response */
 		uint8_t		_status; /* bits info */
 
@@ -78,9 +78,9 @@ class Request
 		_host(),
 		_uri(),
 //		_version(),
-		_query()
+		_query(),
 		_body_size(0),
-		_code(_OK),
+		_code(OK),
 		_method(METHOD_UNKNOWN),
 		_form(FORM_UNKNOWN),
 		_status(0){}
@@ -88,13 +88,34 @@ class Request
 		/* destructor */
 		~Request () {}
 
+		/* for debug only */
+		void	print() const {
+			std::cout << "-------------------------------------------\n\n";
+			std::cout << BLUE << "Host: " << EOCC << _host << "\n";
+			std::cout << BLUE << "Method: " << EOCC << _method << "\n";
+			std::cout << BLUE << "URI: " << EOCC << _uri << "\n";
+			std::cout << BLUE << "version: " << EOCC << "HTTP 1.1" << "\n";
+			std::cout << GREEN << "query: " << EOCC << _query<< "\n";
+			std::cout << BLUE << "Headers => " << EOCC << "\n-----------------------\n";
+			for (Headers::const_iterator cit = _headers.begin(); cit != _headers.end(); ++cit)
+				std::cout << PURPLE << (cit)->first << " : " << EOCC << (cit)->second
+					<< "\n";
+			std::cout << "\n -----------------------\n";
+			std::cout << BLUE << "body size: " << EOCC << _body_size << " (should be 0 except the method is POST)\n";
+			if (_body_size)
+				std::cout << BLUE << "Body: " << EOCC << _raw << "\n";
+			std::cout << RED << "status code: " << EOCC << _code << "\n";
+			std::cout <<  "hidden status: " << (int)_status << "\n";
+			std::cout << "-------------------------------------------\n\n";
+		}
+
 		/* getter */
 		METHODS	get_method() const { return _method; }
-		std::string const &get_uri() { return _uri; }
-		std::string const &get_query() { return _query; }
-		std::string const &get_host() { return _host; }
-		bool	header_ready() { return ((_status & HEADER_READY)); } /* init success */
-		bool	have_read_enought() { return (_raw.fin("\r\n\r\n") != std::string::npos); }
+		std::string const &get_uri() const { return _uri; }
+		std::string const &get_query() const { return _query; }
+		std::string const &get_host() const { return _host; }
+		bool	header_ready() const { return ((_status & HEADER_READY)); } /* init success */
+		bool	have_read_enought() const { return (_raw.find("\r\n\r\n") != std::string::npos); }
 		/* methods */
 		void	add_buffer( std::string const &buffer ) {
 			_raw += buffer;
@@ -112,7 +133,7 @@ class Request
 			if (!_validate_host())
 				return (false);
 			if (_method == _POST && _validate_post() == false)
-				return false;
+				return (false);
 			_status |= HEADER_READY;
 			return (true);
 		}
@@ -122,9 +143,9 @@ class Request
 			if (_read_chunks() == READ_WAIT)
 				return (false);
 			_body_size = _raw.size();
-			_status &= ˜CHUNKED;
+			_status &= ~CHUNKED;
 			_status |= BODY_READY; // ?
-			retun (true);
+			return (true);
 		}
 		if (_raw.size() < _body_size) // error
 			return (false);
@@ -135,8 +156,8 @@ class Request
 	bool	closed() {
 		if (!(_status & CLOSED)) {
 			Headers::const_iterator cit = _headers.find("connection");
-			if (it != _headers.end()) {
-				if (it->second == "close") {
+			if (cit != _headers.end()) {
+				if (cit->second == "close") {
 					_status |= CLOSED;
 					return (true);
 				}
@@ -183,23 +204,23 @@ class Request
 		   if (m == "TRACE")
 		   return (_TRACE);
 		*/
-		return (_UNKNOWN);
+		return (METHOD_UNKNOWN);
 	}
 
 	/* get method */
 	/* GET */
 	bool	_extract_method() {
 		_separator_pos = _raw.find(" ");
-		if (separator_pos == std::string::npos) //no separator found
-			return _invalid_(BAD_REQUEST);
+		if (_separator_pos == std::string::npos) //no separator found
+			return _invalid(BAD_REQUEST);
 
-		_method = _get_method(_raw_request.substr(0, separator_pos));
+		_method = _get_method(_raw.substr(0, _separator_pos));
 
 		/* uptade _raw */
-		//		_raw_request.erase(0, separator_pos + 1); //could be done faster with handwriten buffer
+		//		_raw.erase(0, _separator_pos + 1); //could be done faster with handwriten buffer
 		++_separator_pos;
 
-		if (_method == METH_UNKNOWN) // could not get the method right
+		if (_method == METHOD_UNKNOWN) // could not get the method right
 			return _invalid(NOT_IMPLEMENTED); // change this
 		return (true);
 	}
@@ -212,7 +233,7 @@ class Request
 			return (_invalid(BAD_REQUEST));
 		if (tmp > 8192) /* Apach standard */
 			return (_invalid(REQUEST_URI_TOO_LONG));
-		_uri = _raw.substr(_separator_pos, tmp);
+		_uri = _raw.substr(_separator_pos, tmp - _separator_pos);
 
 		if (_uri == "" || _uri[0] != '/') // (trully) not certain about the last condition... 
 			return (_invalid(BAD_REQUEST));
@@ -242,12 +263,12 @@ class Request
 		size_t const tmp = _raw.find("\r\n", _separator_pos); /* end of the fist line */
 		if (tmp == std::string::npos)
 			return (_invalid(BAD_REQUEST));
-		_version = _raw.substr(_separator_pos, tmp);
+		_version = _raw.substr(_separator_pos, tmp - _separator_pos);
 		//_strtolower(&_version); /* need to verify is this is need */
 		/* this way is maybe to specific... not sure about the protocol liberty */
 		if (_version.find("HTTP/") != 0)
 			return (_invalid(BAD_REQUEST));
-		if (_version[6] != '1' || _version[7] != '.' || _version[8] != '1')
+		if (_version[5] != '1' || _version[6] != '.' || _version[7] != '1')
 			return _invalid(HTTP_VERSION_NOT_SUPPORTED);
 
 		/* les restrictiv way... aborded for the moment  --------------.
@@ -289,7 +310,7 @@ class Request
 		size_t	tmp  = _raw.find("\r\n", _separator_pos);
 
 		while (tmp != std::string::npos) {
-			std::string	header_str = _raw.substr(_separator_pos, tmp);
+			std::string	header_str = _raw.substr(_separator_pos, tmp - _separator_pos);
 			size_t		name_separator_pos = header_str.find(":");
 			if (name_separator_pos == std::string::npos)
 				break;
@@ -298,7 +319,7 @@ class Request
 			_strtolower(&header_name);
 			//if (header_name != "cookie")
 			_strtolower(&header_value); //maybe not
-			_trim(&header_value);
+	//		_trim(&header_value);
 			(*bucket)[header_name] = header_value;
 			if (header_name == "host")
 				_host = header_value;
@@ -306,11 +327,15 @@ class Request
 			header_size += _separator_pos;
 			if (header_size > 16384) /* default 16Kb */
 				return (_invalid(REQUEST_HEADER_FIELDS_TOO_LARGE));
-			 tmp =  raw.find("/r/n", _separator_pos);
+			 tmp =  _raw.find("\r\n", _separator_pos);
 		}
 		_raw.erase(0, _separator_pos + 2); //sould erase all the header
-		////////////////////////////////////////////////
-		std::cout << "test: " << _raw << "\n";
+		/////////////////DEBUG///////////////////////////////
+		/*
+		std::cout << "================================\n";
+		std::cout << "verif _raw header empty: " << _raw << "\n";
+		std::cout << "================================\n";
+		*/
 		///////////////////////////////////////////////
 		return (true);
 	}
@@ -332,7 +357,7 @@ class Request
 					return (READ_OK);
 				}
 				body += _raw.substr(chunk_size_info + 2, chunk_size);
-				_raw_request.erase(0, chunk_size + chunk_size_info + 4);
+				_raw.erase(0, chunk_size + chunk_size_info + 4);
 			} while (true);
 		}
 	}
@@ -359,15 +384,15 @@ class Request
 		}
 		it = _headers.find("content-type");
 		if (it == _headers.end() || it->second == "")
-			return (_invalid_(BAD_REQUEST));
+			return (_invalid(BAD_REQUEST));
 		if (it->second == "application/x-www-form-urlencoded")
-			_post_form = _URLENCODED;
+			_form = _URLENCODED;
 		else if (it->second == "multipart/form-data")
-			_post_form = _MULTIPART;
+			_form = _MULTIPART;
 		return (true);
 	}
 
-	bool	_invalid_request(STATUS_CODE http_code) {
+	bool	_invalid(STATUS_CODE http_code) {
 		_code = http_code;
 		_status |= CLOSED;
 		return (false);

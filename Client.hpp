@@ -37,14 +37,6 @@ class Client
 		int					_fd;
 
 	public:
-		/*
-		enum READ_STATUS {
-			READ_ERROR = 0,
-			READ_EOF,
-			READ_OK
-		};
-		*/
-
 		/* constructor */
 		Client ( serverBlock *serv, int ev_fd ):
 			_serv(serv),
@@ -94,19 +86,13 @@ class Client
 					//change ping time
 				} else 
 					_request->add_buffer(buffer);
-			//std::cout << "\n" << buffer << "\n";
 				return (_read_status());
 			}
 		}
 
 		/* tmp */
 		bool	send_response() {
-			/*
-			   if (resp)
-			   delete resp;
-			   resp = new Response(req);
-			   */
-			//		if (send(_fd, resp->toString(), resp->size(), 0) == -1) {
+			/* so far default response.... */
 			if (send(_fd, RESPONSE, strlen(RESPONSE), 0) == -1) {
 				std::cerr << "send(): failed\n";
 				return (true);
@@ -117,15 +103,18 @@ class Client
 			private: 
 		/* private functions */
 		READ	_read_status() {
-			if (!request->header_ready()) {
-				if (!request->have_read_enought())
+			if (!_request->header_ready()) {
+				if (!_request->have_read_enought())
 					return (READ_WAIT);
-				else
-					if (!request->read_header())
+				else 
+					if (!_request->read_header())
 						return (READ_OK);
 			}
-			if (request->get_method() == _POST && !request->read_body())
+			if (_request->get_method() == _POST && !_request->read_body())
 				return (READ_WAIT);
+			//////// debug /////////
+			_request->print();
+			//////////////////////
 			return (READ_OK);
 		}
 
@@ -133,5 +122,6 @@ class Client
 			getpeername(_fd, (struct sockaddr *)&_addr, &_addrln);
 			return (inet_ntoa(_addr.sin_addr));
 		}
+};
 
 #endif /* end of include guard CLIENT_HPP */

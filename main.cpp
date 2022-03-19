@@ -14,8 +14,10 @@ int main()
 	/* this part should be get form the parsing */
 	/* at this point I whant a vector of server block (ngix config */
 	std::vector<serverBlock *>	_servers;
-//	_servers.push_back(new serverBlock("127.0.0.2", "mytest.ru", 8080));
+//	_servers.push_back(new serverBlock("192.168.1.2", "mytest.ru", 8000));
 	_servers.push_back(new serverBlock("127.0.0.1", "localhost.ru", 8000));
+	_servers.push_back(new serverBlock("127.0.0.1", "localhost.ru", 8080));
+	_servers.push_back(new serverBlock("127.0.0.1", "localhost.ru", 8010));
 
 	/* utility */
 	struct timespec timeout;
