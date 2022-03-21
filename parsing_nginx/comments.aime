@@ -47,9 +47,9 @@ about Serv_block
 
 about Configuration:
 
-- what is the use of serv ?
-- what is the use of loc ?
-... whill is that on the config.cpp .....
+- what is the use of serv ? // ok
+- what is the use of loc ? // ok
+... I whill see that on the config.cpp .....
 - for my usage I will prefere if the server field was a vector of pointer to
   Serv_block
 
@@ -63,10 +63,14 @@ be cleaner if the config class handel this internaly.
 
 ......... configuration::work() ..........
 - general_init: I do not understant what your doing there (so far)
+// update: ok I finaly get it, it may be better to use stack array (no vector)
+	for this or at least reserve() space beffor push_back
+
 - serv.init(): I dont see the use to all this clear. anyway to proper way to do
 	this (cpp way) is to write a constructor for your Serv_block.
 - loc_init: so far is confusing any way your argument should be a bool not an
   int
+
 - parser_conf: in str_to_conf your putting every line of the configuration file 
 whithoud the space or the tab... ok ok. the cpp way is more somthing as:
 	str_to_conf = 
@@ -78,8 +82,54 @@ whithoud the space or the tab... ok ok. the cpp way is more somthing as:
 	also there is way yo read the all file at one (not using getline)
 	anyway your way work but is a bit c-style
 
-- line_control(): another clear() that i dont understand.
+- line_control(): another clear() OK I've get it
+	if (i == len) haha... better write if (len == 0) (readability ++)
+	no need to use else if (just else is ok and better)
+	ok think I understand what it does. (not easy :D)
 
+- get_line(): return a copy of p_confing (expensive) when I think you want to
+  return a reference (smaller and do the same)
+
+  in your loop you dont need to check each time is_server_bloc()
+  the propre way:
+  --------
+  if (p_config[0] == '#') continue ;
+  if (server_block == 0) config_part();
+  else if (location_block == 0) take_server_part();
+  else take_location_part();
+  ----------
+  
+  ............. take_server_part .............
+  - for my usage better push_back(new server(serv))
+  - sym: if it never change use a define SYM ';'
+  - get_directive: c style again. c++ is more like:
+	std::string Configuration::get_directive(std::string &str) {
+  	retrurn (p_confing.substr(str.len()));
+	}
+	also you forgot the pass your string by reference, so you made a copy of it
+	wich is expensive.
+
+- take_server_directive: you should pass your argument by reference ;)
+
+....... take location par ...........
+- sym: should be a define or at least a static const chat
+- take_location_directives : you should pass yours argument by reference
+
+
+- General comment: (so y stop repeating myself) container should almost always be
+passed by reference or const reference.
+
+- get_ip: c style could do better( more readable and c++ style) using find +
+substr:
+	std::string::const_iterator it = directive.find(":");
+	if (it == std::npos) sev.ip = "127.0.0.1";
+	else
+		serv.ip = directive.substr(0, it);
+	ser.port = ft_stoi_unsign(directive.substr(it));
+
+- ft_stoi_unsign: just a micro opti remark (sorry) 
+	you dont need your if (i != 0) cause 0 * 10 = 0;
+	also adding a branch slow down your loop;
 
 
 
