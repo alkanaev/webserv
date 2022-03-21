@@ -1,0 +1,88 @@
+Disclaimer: I'm not better nor more experimented than you. My chose may not be
+more wise nor more accured.
+I may sound assertive in my comment but there are juste reprentative of my
+feelings at this moment. I'm just oppening a discution not saying that thing
+should be in that way or that way. Please do not take any remark personnaly :)
+I like you a lot and I think you've donne a great job (Im very admirativ about
+how you handel yourself... but that is another story).
+dont hate me for what your about to read ->
+
+#### CONFIG HPP ####
+
+about Allowed enum:
+- HEAD methode is not mandatory.
+- no need to add the '=' but it is ok, just a matter of style.
+- maybe use the enum.hpp I have done (modify it if you whant)
+
+about Loc_block
+
+- vecort may not be the better data for hold the allowed method
+	my pesonal fav would be a unsigned char where we set bit accordingly,
+	otherwhise and bool array[5] is the way to go (then used as:
+	if (methods[GET] == true) => then:
+	if (methods[POST == true) => then: 
+	) but of course this comment is not realy important... as you wish
+
+- a location block may have multiple index no ? then vectoc<string> whild be the
+  way to go.
+- dont know what is auth_basic (need to ask ALINA brew)
+- "      "      "   aut_basic_user_file
+- cgi: it may have multiple cig so this way is not the way.
+	considering that cgi_path and cgi_extension works togetter the besired
+	structur should be std::map<std::string, std::string> cgi. ( not 100% sure
+	cause I need to learn more about cgi
+
+about Serv_block
+	note: this is the point where we meet the parsing and the reste of the
+	server.
+
+- allow: same remark as Lock_bloc::methods
+- lisent: I dont know what it is.
+- index: may have multiple index so the way to go should be std::vector<string>
+- error_page may have multiple error page (one for each type of error)
+	be best way to go si map<int, string> where the int is the error code
+
+/// note for work join ///
+- ip is what I caled "host" in my version, ok to use ip ;)
+
+about Configuration:
+
+- what is the use of serv ?
+- what is the use of loc ?
+... whill is that on the config.cpp .....
+- for my usage I will prefere if the server field was a vector of pointer to
+  Serv_block
+
+##### CONFIG CPP #####
+note: the parsing is the first class to be called... is argument should be
+	int ac, char **av. and the class should take the charge to open the config
+	file according to the path given at av[0]; (then ac should be == 2)
+
+note on note: ok I read the main.cpp. it is ok as you do it, but I belive it would
+be cleaner if the config class handel this internaly.
+
+......... configuration::work() ..........
+- general_init: I do not understant what your doing there (so far)
+- serv.init(): I dont see the use to all this clear. anyway to proper way to do
+	this (cpp way) is to write a constructor for your Serv_block.
+- loc_init: so far is confusing any way your argument should be a bool not an
+  int
+- parser_conf: in str_to_conf your putting every line of the configuration file 
+whithoud the space or the tab... ok ok. the cpp way is more somthing as:
+	str_to_conf = 
+			str_to_parse.erase(std::remove(str_to_parse.begin(),
+			str_to_parse.end(), ' '), str_to_parse.end()); //removing the spaces
+	str_to_conf.erase(std::remove(str_to_conf.begin(), str_to_conf.end(),
+	'\t'), str_to_conf.end()) // removing the tabs.
+	
+	also there is way yo read the all file at one (not using getline)
+	anyway your way work but is a bit c-style
+
+- line_control(): another clear() that i dont understand.
+
+
+
+
+
+
+
