@@ -140,11 +140,6 @@ int Configurations::is_location_block()
 	return location_block;
 }
 
-std::string Configurations::get_line() 
-{
-	return p_config;
-}
-
 int Configurations::check_string(std::string str) 
 {
 	int len = str.length();
@@ -385,6 +380,11 @@ void Configurations::take_location_part()
 	}
 }
 
+std::string Configurations::get_line() 
+{
+	return p_config;
+}
+
 void Configurations::work(std::string file) 
 {
 	general_init();
@@ -395,11 +395,11 @@ void Configurations::work(std::string file)
 	{
 		if (get_line()[0] == '#') 
 			continue;
-		else if (is_server_block() == 0)
+		else if (!is_server_block())
 			config_part();
-		else if (is_server_block() == 1 && is_location_block() == 0)
+		else if (is_server_block() && !is_location_block())
 			take_server_part();
-		else if (is_server_block() == 1 && is_location_block() == 1)
+		else if (is_server_block() && is_location_block())
 			take_location_part();
 	}
 }
