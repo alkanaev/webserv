@@ -24,12 +24,12 @@ struct Loc_block
 {
 	std::vector<Allowed>	methods;
 	std::string    path;
-	std::string    index;
+    std::vector<std::string> index;
 	bool    autoindex;
 	std::string    root;
 	bool	auth_basic;
 	std::string	auth_basic_user_file;
-    std::string	cgi_path;
+    std::string	cgi_path; // transform to std::map<std::string, std::string>
 	std::string	cgi_extension;
 	unsigned int    client_max_body_size;
 
@@ -43,11 +43,11 @@ struct Serv_block
 	int    port;
 	std::string    ip;
 	std::string    listen;
-	std::string	index;
+    std::vector<std::string> index;
 	bool	autoindex;
 	std::string	root;
 	std::string    server_name;
-	std::string    error_page;
+    std::map<int,std::string> error_page;
 	
 	friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
 };
@@ -63,8 +63,7 @@ class Configurations
         int    is_location_block();
         std::string	get_line();
         int    check_string(std::string str);
-        void	allow_methods_serv(std::string directive);
-        void	allow_methods(std::string directive);
+        void allow_methods(std::string directive, int k);
         unsigned int	ft_stoi_unsign(std::string);
         void    parser_conf(std::string file);
         int    line_control();
@@ -78,6 +77,10 @@ class Configurations
         int    check_end_line(char i);
         void    work(std::string file);
         void    print_parsed();
+        std::map<int,std::string> take_error_pages(std::string directive);
+        int get_err_num(std::string const &s);
+        std::string get_err_path(std::string const &s);
+        void take_index_vector(std::string directive, int k);
 
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Configurations &obj);
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
@@ -93,7 +96,7 @@ class Configurations
         std::vector<std::string>	directives_config;
         std::vector<std::string>	directives_serv;
         std::vector<std::string>	directives_loc;
-        std::vector<Serv_block>	server;
+        std::vector<Serv_block*>	server;
 };
 
 #endif

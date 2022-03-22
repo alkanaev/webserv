@@ -12,7 +12,7 @@ std::vector<std::string> Configurations::split(const std::string &str, char sep)
     return elems;
 }
 
-void Configurations::allow_methods(std::string directive) 
+void Configurations::allow_methods(std::string directive, int k) 
 {
 	std::string words[6] = {"GET", "PUT", "POST", "HEAD", "DELETE", "UNSUPPORTED"};
 	Allowed par[6] = {GET, PUT, POST, HEAD, DELETE, UNSUPPORTED};
@@ -27,32 +27,16 @@ void Configurations::allow_methods(std::string directive)
 		{
 			if (tokens[j] == words[i])
 			{
-				if(std::find(loc.methods.begin(), loc.methods.end(), par[i]) == loc.methods.end())
-					loc.methods.push_back(par[i]);
-			}
-			else 
-				tmp += directive[i];
-		}
-	}
-}
-
-void Configurations::allow_methods_serv(std::string directive) 
-{
-	std::string words[6] = {"GET", "PUT", "POST", "HEAD", "DELETE", "UNSUPPORTED"};
-	Allowed par[6] = {GET, PUT, POST, HEAD, DELETE, UNSUPPORTED};
-	std::string tmp;
-	tmp.clear();
-	std::string delimiter = ",";
-	std::vector<std::string> tokens = split(directive, ',');
-	int j = 0;
-	for (int i = 0; i < 6; i++)
-	{
-		for (int j = 0; j < tokens.size(); j++)
-		{
-			if (tokens[j] == words[i])
-			{
-				if(std::find(serv.allow.begin(), serv.allow.end(), par[i]) == serv.allow.end())
-					serv.allow.push_back(par[i]);
+				if (k)
+				{
+					if(std::find(serv.allow.begin(), serv.allow.end(), par[i]) == serv.allow.end())
+						serv.allow.push_back(par[i]);
+				}
+				else
+				{
+					if(std::find(loc.methods.begin(), loc.methods.end(), par[i]) == loc.methods.end())
+						loc.methods.push_back(par[i]);
+				}
 			}
 			else 
 				tmp += directive[i];
@@ -70,8 +54,8 @@ void Configurations::general_init()
 	directives_serv.push_back("autoindex");
 	directives_serv.push_back("server_name");
 	directives_serv.push_back("error_page");
-	directives_serv.push_back("location");
 	directives_serv.push_back("allow");
+	directives_serv.push_back("location");
 
 	location_block = 0;
 	directives_loc.push_back("index");
@@ -237,6 +221,46 @@ void Configurations::get_ip(std::string directive)
 		serv.port = ft_stoi_unsign(tmp);
 }
 
+int Configurations::get_err_num(std::string const &s)
+{
+    std::string::size_type pos = s.find('/');
+    if (pos != std::string::npos)
+        return ft_stoi_unsign(s.substr(0, pos));
+    else
+        return ft_stoi_unsign(s);
+}
+
+std::string Configurations::get_err_path(std::string const &s)
+{
+	std::string res;
+	res = s.substr(s.find("/"));
+	return res;
+}
+
+std::map<int,std::string> Configurations::take_error_pages(std::string directive)
+{
+	serv.error_page[get_err_num(directive)] = get_err_path(directive);
+	return serv.error_page;
+}
+
+void Configurations::take_index_vector(std::string directive, int k)
+{
+	std::string tmp = directive;
+	std::string sub;
+	std::string delimiter = ".html";
+	size_t pos = 0;
+	std::string token;
+	while ((pos = tmp.find(delimiter)) != std::string::npos) 
+	{
+		token = tmp.substr(0, pos);
+		if (k)
+			serv.index.push_back(token.insert(token.length(), delimiter));
+		else
+			loc.index.push_back(token.insert(token.length(), delimiter));
+		tmp.erase(0, pos + delimiter.length());
+	}
+}
+
 void Configurations::take_server_directives(std::string name , std::string directive) 
 {
 	if (name == "listen") 
@@ -251,14 +275,21 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	else if (name == "allow") 
 	{
 		serv.allow = std::vector<Allowed>();
-		allow_methods_serv(directive);
+		allow_methods(directive, 1);
 	}
-	else if (name == "index") 
-		serv.index = directive;
+	else if (name == "index")
+		take_index_vector(directive, 1);
+	else if(name == "error_page")
+	{
+		serv.error_page = take_error_pages(directive);
+		// serv.error_page = directive;
+	}
 	else if (name == "autoindex") 
 	{
-		if (directive == "on") 
+		if (directive == "on")
+		{
 			serv.autoindex = true;
+		}
 		else if (directive == "off") 
 			serv.autoindex = false;
 	}
@@ -268,17 +299,17 @@ void Configurations::take_server_directives(std::string name , std::string direc
 		loc.path = directive;
 }
 
-void Configurations::take_location_directives(std::string name , std::string directive) 
+void Configurations::take_location_directives(std::string name, std::string directive) 
 {
 	if (name == "root") 
 		loc.root = directive;
 	else if (name == "methods") 
 	{
 		loc.methods = std::vector<Allowed>();
-		allow_methods(directive);
+		allow_methods(directive, 0);
 	} 
 	else if (name == "index") 
-		loc.index = directive;
+		take_index_vector(directive, 0);
 	else if (name == "autoindex") 
 	{
 		if (directive == "on") 
@@ -327,7 +358,7 @@ void Configurations::take_server_part()
 	if (p_config == "}")
 	{ 
 		server_block = 0;
-		server.push_back(serv);
+		server.push_back(&serv);
 	}
 	else 
 	{
@@ -407,29 +438,41 @@ void Configurations::work(std::string file)
 void Configurations::print_parsed() 
 {
 	std::cout << "__________________\n" << "serv configs num::\t\t" << server.size() << "\n__________________\n\n" << std::endl;
-	for(std::vector<Serv_block>::iterator its = server.begin(); its != server.end(); its++) 
+	for(std::vector<Serv_block*>::iterator its = server.begin(); its != server.end(); its++) 
 	{
 		std::cout << "**SERVER BLOCK**" << std::endl;
-		std::cout << "__________________\n" << "loc configs num::\t\t" << its->location.size() << "\n__________________\n" << std::endl;
-		std::cout << "listen:\t\t" << its->listen << std::endl;
-		std::cout << "listen ip:\t\t" << its->ip << std::endl;
-		std::cout << "listen port:\t\t" << its->port << std::endl;
-		std::cout << "server_name:\t\t" << its->server_name << std::endl;
-		std::cout << "root:\t\t" << its->root << std::endl;
-		std::cout << "index:\t\t" << its->index << std::endl;
-		std::cout << "autoindex:\t\t" << its->autoindex << std::endl;
-		if (!(its->allow).empty())
+		std::cout << "__________________\n" << "loc configs num::\t\t" << (*its)->location.size() << "\n__________________\n" << std::endl;
+		std::cout << "listen:\t\t" << (*its)->listen << std::endl;
+		std::cout << "listen ip:\t\t" << (*its)->ip << std::endl;
+		std::cout << "listen port:\t\t" << (*its)->port << std::endl;
+		std::cout << "server_name:\t\t" << (*its)->server_name << std::endl;
+		std::cout << "root:\t\t" << (*its)->root << std::endl;
+		std::cout << "index:\t\t";
+		for (int i = 0; i < (*its)->index.size(); i++) 
+			std::cout << (*its)->index.at(i) << " ";
+		std::cout << std::endl;
+		std::cout << "autoindex:\t\t" << (*its)->autoindex << std::endl;
+		std::map<int,std::string>::iterator it = (*its)->error_page.begin();
+		while(it != (*its)->error_page.end())
+		{
+			std::cout << "error_page\t\t" << it->first << " :: "<< it->second << std::endl;
+			it++;
+		}
+		if (!((*its)->allow).empty())
 			std::cout << "HERE ARE ALLOWS METHS :" << std::endl;
 		// else
 		// 	std::cout << "NO ALLOWS METHS" << std::endl;
 	
-		for(std::vector<Allowed>::iterator k = its->allow.begin(); k != its->allow.end(); k++) 
+		for(std::vector<Allowed>::iterator k = (*its)->allow.begin(); k != (*its)->allow.end(); k++) 
 			std::cout << "server allows >\t\t" << *k << std::endl;
 
-		for(std::vector<Loc_block>::iterator itl = its->location.begin(); itl != its->location.end(); itl++) {
+		for(std::vector<Loc_block>::iterator itl = (*its)->location.begin(); itl != (*its)->location.end(); itl++) {
 			std::cout << "\n**LOC BLOCK**" << std::endl;
 			std::cout << "path:\t\t" << itl->path << std::endl;
-			std::cout << "index:\t\t" << itl->index << std::endl;
+			std::cout << "index:\t\t";
+			for (int i = 0; i < itl->index.size(); i++) 
+				std::cout << itl->index.at(i) << " ";
+			std::cout << std::endl;
 			std::cout << "autoindex:\t\t" << itl->autoindex << std::endl;
 			std::cout << "root:\t\t" << itl->root << std::endl;
 			std::cout << "auth_basic:\t\t" << itl->auth_basic << std::endl;
