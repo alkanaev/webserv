@@ -379,7 +379,7 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	{
 		serv.root = directive;
 		if (!check_string(directive))
-			err_message("Bad parameter, directive's name: root");
+			err_message("Bad parameter, directive's name: root / server");
 	}
 	else if (name == "allow") 
 	{
@@ -396,6 +396,8 @@ void Configurations::take_server_directives(std::string name , std::string direc
 			serv.autoindex = true;
 		else if (directive == "off") 
 			serv.autoindex = false;
+		else
+			err_message("Bad parameter, directive's name: autoindex / server");
 	}
 	else if (name == "server_name") 
 		serv.server_name = directive;
@@ -413,7 +415,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	{
 		loc.root = directive;
 		if (!check_string(directive))
-			err_message("Bad parameter, directive's name: root");
+			err_message("Bad parameter, directive's name: root / location");
 	}
 	else if (name == "return") 
 		loc.redirect = take_redirect(directive, 0);
@@ -431,7 +433,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		else if (directive == "off") 
 			loc.autoindex = false;
 		else
-			err_message("Bad parameter, directive's name: autoindex");
+			err_message("Bad parameter, directive's name: autoindex / location");
 	} 
 	else if (name == "auth_basic")
 	{
