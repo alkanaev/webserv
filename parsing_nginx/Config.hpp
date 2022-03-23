@@ -30,8 +30,9 @@ struct Loc_block
 	std::string    root;
 	bool	auth_basic;
 	std::string	auth_basic_user_file;
-    std::string	cgi_path; // transform to std::map<std::string, std::string>
-	std::string	cgi_extension;
+    std::string	cgi_path; // transform to std::map<std::string, std::string> (?)
+	std::string	cgi_extension; // need to know that we need exactly these chi directives
+    std::map<int,std::string> redirect;
 	unsigned int    client_max_body_size;
 
 	friend std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj);
@@ -48,6 +49,7 @@ struct Serv_block
 	bool	autoindex;
 	std::string	root;
 	std::string    server_name;
+    std::map<int,std::string> redirect;
     std::map<int,std::string> error_page;
 	
 	friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
@@ -64,7 +66,7 @@ class Configurations
         int    is_location_block();
         std::string	get_line();
         int check_string(std::string str);
-        int check_err_num_page(std::string str);
+        int check_err_num_path(std::string str);
         void allow_methods(std::string directive, int k);
         unsigned int	ft_stoi_unsign(std::string);
         void    parser_conf(std::string file);
@@ -87,6 +89,8 @@ class Configurations
         void err_message(std::string str);
         int error_found();
         int	err_str_set_get(int k);
+        std::map<int,std::string> take_redirect(std::string directive, int k);
+        int check_redirect(std::string str);
 
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Configurations &obj);
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
@@ -97,8 +101,8 @@ class Configurations
         Loc_block    loc;
         int    server_block;
         int    location_block;
-        int f_error_str;
-        int f_error;
+        int error_str_cnt;
+        int error_check_point;
         std::string str_to_parse;
         std::string	str_to_conf;
         std::string	p_config;

@@ -66,14 +66,14 @@ void Configurations::allow_methods(std::string directive, int k)
 
 void Configurations::err_message(std::string str)
 {
-	f_error = 1;
+	error_check_point = 1;
 	std::cout << str << std::endl;
 }
 
 void Configurations::general_init() 
 {
-	f_error = 0;
-	f_error_str = 0;
+	error_check_point = 0;
+	error_str_cnt = 0;
 
 	server_block = 0;
 	directives_config.push_back("server");
@@ -84,6 +84,7 @@ void Configurations::general_init()
 	directives_serv.push_back("server_name");
 	directives_serv.push_back("error_page");
 	directives_serv.push_back("allow");
+	directives_serv.push_back("return");
 	directives_serv.push_back("location");
 
 	location_block = 0;
@@ -96,6 +97,7 @@ void Configurations::general_init()
 	directives_loc.push_back("cgi_extension");
 	directives_loc.push_back("cgi_path");
 	directives_loc.push_back("client_max_body_size");
+	directives_loc.push_back("return");
 }
 
 void Configurations::serv_init() 
@@ -107,7 +109,6 @@ void Configurations::serv_init()
 	serv.autoindex = false;
 	serv.port = 0;
 	serv.server_name.clear();
-	serv.error_page.clear();
 	serv.location = std::vector<Loc_block>();
 }
 
@@ -161,35 +162,6 @@ int Configurations::check_string(std::string str)
 		return 1;
 	else
 		return 0;
-}
-
-int Configurations::check_err_num_page(std::string str) 
-{
-	std::list<int> errs;
-	for (int i = 400; i < 419; i++)
-        errs.push_back(i);
-	for (int i = 421; i < 427; i++)
-        errs.push_back(i);
-	errs.push_back(428);
-	errs.push_back(429);
-	errs.push_back(431);
-	errs.push_back(451);
-	for (int i = 500; i < 509; i++)
-        errs.push_back(i);
-	errs.push_back(510);
-	errs.push_back(511);
-
-	// check number
-	std::string num = str.substr(0, 3);
-	// check path
-	std::string path = str.substr(3, str.length() - 1);
-	bool found = (std::find(std::begin(errs), std::end(errs), ft_stoi_unsign(num)) != std::end(errs));
-	std::string::const_iterator it = num.begin();
-	while (it != num.end() && std::isdigit(*it))
-		++it;
-	if ((!num.empty() && it == num.end()) && found && check_string(path))
-		return 1;
-	return 0;
 }
 
 unsigned int Configurations::ft_stoi_unsign(std::string str) 
@@ -308,13 +280,73 @@ std::string Configurations::get_err_path(std::string const &s)
 	return res;
 }
 
+int Configurations::check_err_num_path(std::string str) 
+{
+	std::list<int> errs;
+	for (int i = 400; i < 419; i++)
+        errs.push_back(i);
+	for (int i = 421; i < 427; i++)
+        errs.push_back(i);
+	errs.push_back(428);
+	errs.push_back(429);
+	errs.push_back(431);
+	errs.push_back(451);
+	for (int i = 500; i < 509; i++)
+        errs.push_back(i);
+	errs.push_back(510);
+	errs.push_back(511);
+
+	// check number
+	std::string num = str.substr(0, 3);
+	// check path
+	std::string path = str.substr(3, str.length() - 1);
+	bool found = (std::find(std::begin(errs), std::end(errs), ft_stoi_unsign(num)) != std::end(errs));
+	std::string::const_iterator it = num.begin();
+	while (it != num.end() && std::isdigit(*it))
+		++it;
+	if ((!num.empty() && it == num.end()) && found && check_string(path))
+		return 1;
+	return 0;
+}
+
+int Configurations::check_redirect(std::string str)
+{
+	std::string num = str.substr(0, 3);
+	std::string::const_iterator it = num.begin();
+	while (it != num.end() && std::isdigit(*it))
+		++it;
+	if ((!num.empty() && it == num.end()) && str.length() > 3)
+		return 1;
+	return 0;
+}
+
 std::map<int,std::string> Configurations::take_error_pages(std::string directive)
 {
-	if (!check_err_num_page(directive))
+	if (!check_err_num_path(directive))
 		err_message("Bad parameter, directive's name: error_page");
-	serv.error_page[get_err_num(directive)] = get_err_path(directive);
+	else
+		serv.error_page[get_err_num(directive)] = get_err_path(directive);
 	return serv.error_page;
 }
+
+std::map<int,std::string> Configurations::take_redirect(std::string directive, int k)
+{
+	if (!check_redirect(directive))
+		err_message("Bad parameter, problem of redirect parameter");
+	else
+	{
+		if (k)
+		{
+			serv.redirect[ft_stoi_unsign(directive.substr(0, 3))] = directive.substr(3, directive.length() - 1);
+			return serv.redirect;
+		}
+		else 
+			loc.redirect[ft_stoi_unsign(directive.substr(0, 3))] = directive.substr(3, directive.length() - 1);
+			return loc.redirect;
+	}
+	return loc.redirect;
+}
+
 
 void Configurations::take_index_vector(std::string directive, int k)
 {
@@ -341,6 +373,8 @@ void Configurations::take_server_directives(std::string name , std::string direc
 		get_ip(directive);
 		serv.listen = directive;
 	} 
+	else if (name == "return")
+		serv.redirect = take_redirect(directive, 1);
 	else if (name == "root")
 	{
 		serv.root = directive;
@@ -381,6 +415,8 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		if (!check_string(directive))
 			err_message("Bad parameter, directive's name: root");
 	}
+	else if (name == "return") 
+		loc.redirect = take_redirect(directive, 0);
 	else if (name == "methods") 
 	{
 		loc.methods = std::vector<Allowed>();
@@ -432,7 +468,7 @@ void Configurations::config_part() {
 	{
 		std::cout << "Bad string " << err_str_set_get(1)
 			<< ". Directives outside of a server-context are not allowed\n" << std::endl;
-		f_error = 1;
+		error_check_point = 1;
 	}
 }
 
@@ -499,17 +535,17 @@ std::string Configurations::get_line()
 int Configurations::err_str_set_get(int k) 
 {
 	if (k)
-		return f_error_str;
+		return error_str_cnt;
 	else
 	{
-		f_error_str += 1;
+		error_str_cnt += 1;
 		return 0;
 	}
 }
 
 int Configurations::error_found() 
 {
-	return f_error;
+	return error_check_point;
 }
 
 void Configurations::work(std::string file) 
@@ -564,12 +600,18 @@ void Configurations::print_parsed()
 		std::cout << "listen port:\t\t" << (*its)->port << std::endl;
 		std::cout << "server_name:\t\t" << (*its)->server_name << std::endl;
 		std::cout << "root:\t\t" << (*its)->root << std::endl;
+		std::map<int,std::string>::iterator it = (*its)->redirect.begin();
+		while(it != (*its)->redirect.end())
+		{
+			std::cout << "return\t\t" << it->first << " :: "<< it->second << std::endl;
+			it++;
+		}
 		std::cout << "index:\t\t";
 		for (int i = 0; i < (*its)->index.size(); i++) 
 			std::cout << (*its)->index.at(i) << " ";
 		std::cout << std::endl;
 		std::cout << "autoindex:\t\t" << (*its)->autoindex << std::endl;
-		std::map<int,std::string>::iterator it = (*its)->error_page.begin();
+		it = (*its)->error_page.begin();
 		while(it != (*its)->error_page.end())
 		{
 			std::cout << "error_page\t\t" << it->first << " :: "<< it->second << std::endl;
@@ -589,6 +631,12 @@ void Configurations::print_parsed()
 			std::cout << std::endl;
 			std::cout << "autoindex:\t\t" << itl->autoindex << std::endl;
 			std::cout << "root:\t\t" << itl->root << std::endl;
+			std::map<int,std::string>::iterator it2 = itl->redirect.begin();
+			while(it2 != itl->redirect.end())
+			{
+				std::cout << "return\t\t" << it2->first << " :: "<< it2->second << std::endl;
+				it2++;
+			}
 			std::cout << "auth_basic:\t\t" << itl->auth_basic << std::endl;
 			std::cout << "auth_basic_user_file:\t\t" << itl->auth_basic_user_file << std::endl;
 			std::cout << "cgi_extension:\t\t" << itl->cgi_extension << std::endl;
