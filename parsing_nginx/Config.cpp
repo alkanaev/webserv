@@ -12,6 +12,25 @@ std::vector<std::string> Configurations::split(const std::string &str, char sep)
     return elems;
 }
 
+void Configurations::kick_bad_methods(std::vector<std::string> tokens, std::string words[6])
+{
+	for (int i = 0; i < tokens.size(); i++)
+	{
+		int k = 0;
+		for (int j = 0; j < 6; j++)
+		{
+			if (tokens[i] == words[j])
+				continue;
+			else
+			{
+				k++;
+				if (k == 6)
+					err_message("Bad parameter, problem: bad method given");
+			}
+		}
+	}
+}
+
 void Configurations::allow_methods(std::string directive, int k) 
 {
 	std::string words[6] = {"GET", "PUT", "POST", "HEAD", "DELETE", "UNSUPPORTED"};
@@ -20,6 +39,7 @@ void Configurations::allow_methods(std::string directive, int k)
 	tmp.clear();
 	std::string delimiter = ",";
 	std::vector<std::string> tokens = split(directive, ',');
+	kick_bad_methods(tokens, words);
 	int j = 0;
 	for (int i = 0; i < 6; i++)
 	{
@@ -44,8 +64,17 @@ void Configurations::allow_methods(std::string directive, int k)
 	}
 }
 
+void Configurations::err_message(std::string str)
+{
+	f_error = 1;
+	std::cout << str << std::endl;
+}
+
 void Configurations::general_init() 
 {
+	f_error = 0;
+	f_error_str = 0;
+
 	server_block = 0;
 	directives_config.push_back("server");
 	directives_serv.push_back("listen");
@@ -127,10 +156,40 @@ int Configurations::is_location_block()
 int Configurations::check_string(std::string str) 
 {
 	int len = str.length();
-	if (str[0] == '/' && str[len - 1] != '/')
+	if ((str[0] == '/' || (str[0] == '.' && str[0] == '/')) 
+		&& str[len - 1] != '/')
 		return 1;
 	else
 		return 0;
+}
+
+int Configurations::check_err_num_page(std::string str) 
+{
+	std::list<int> errs;
+	for (int i = 400; i < 419; i++)
+        errs.push_back(i);
+	for (int i = 421; i < 427; i++)
+        errs.push_back(i);
+	errs.push_back(428);
+	errs.push_back(429);
+	errs.push_back(431);
+	errs.push_back(451);
+	for (int i = 500; i < 509; i++)
+        errs.push_back(i);
+	errs.push_back(510);
+	errs.push_back(511);
+
+	// check number
+	std::string num = str.substr(0, 3);
+	// check path
+	std::string path = str.substr(3, str.length() - 1);
+	bool found = (std::find(std::begin(errs), std::end(errs), ft_stoi_unsign(num)) != std::end(errs));
+	std::string::const_iterator it = num.begin();
+	while (it != num.end() && std::isdigit(*it))
+		++it;
+	if ((!num.empty() && it == num.end()) && found && check_string(path))
+		return 1;
+	return 0;
 }
 
 unsigned int Configurations::ft_stoi_unsign(std::string str) 
@@ -195,12 +254,20 @@ void Configurations::get_ip(std::string directive)
 {
 	int the_port = 0;
 	int len = 0;
+	int f_pointer = 0;
 	std::string tmp;
 	for (int i = 0; i < directive.length(); i++) 
 	{
 		if ((directive[i] >= '0' && directive[i] <= ':')
 			|| (directive[i] == '.' && the_port == 0)) 
 		{
+			if(directive[i] == '.') 
+			{
+				if(f_pointer > 3 || (len > 3 || len < 1))
+					err_message("Bad parameter, directive's name: listen");
+				f_pointer++;
+				len = -1;
+			}
 			if (directive[i] == ':' && the_port == 0) 
 			{
 				serv.ip = tmp;
@@ -210,7 +277,9 @@ void Configurations::get_ip(std::string directive)
 			}
 			len++;
 			tmp += directive[i];
-		} 
+		}
+		else
+			err_message("Bad parameter, directive's name: listen");
 	}
 	if (serv.ip.length() == 0) 
 	{
@@ -219,6 +288,8 @@ void Configurations::get_ip(std::string directive)
 	}
 	if (tmp.length() > 0) 
 		serv.port = ft_stoi_unsign(tmp);
+	else
+		err_message("Bad parameter, problem: no port (necessary parameter)");
 }
 
 int Configurations::get_err_num(std::string const &s)
@@ -239,6 +310,8 @@ std::string Configurations::get_err_path(std::string const &s)
 
 std::map<int,std::string> Configurations::take_error_pages(std::string directive)
 {
+	if (!check_err_num_page(directive))
+		err_message("Bad parameter, directive's name: error_page");
 	serv.error_page[get_err_num(directive)] = get_err_path(directive);
 	return serv.error_page;
 }
@@ -268,10 +341,12 @@ void Configurations::take_server_directives(std::string name , std::string direc
 		get_ip(directive);
 		serv.listen = directive;
 	} 
-	else if (name == "root") 
+	else if (name == "root")
 	{
 		serv.root = directive;
-	} 
+		if (!check_string(directive))
+			err_message("Bad parameter, directive's name: root");
+	}
 	else if (name == "allow") 
 	{
 		serv.allow = std::vector<Allowed>();
@@ -280,29 +355,32 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	else if (name == "index")
 		take_index_vector(directive, 1);
 	else if(name == "error_page")
-	{
 		serv.error_page = take_error_pages(directive);
-		// serv.error_page = directive;
-	}
 	else if (name == "autoindex") 
 	{
 		if (directive == "on")
-		{
 			serv.autoindex = true;
-		}
 		else if (directive == "off") 
 			serv.autoindex = false;
 	}
 	else if (name == "server_name") 
 		serv.server_name = directive;
 	else if (name == "location")
+	{
 		loc.path = directive;
+		if (!check_string(directive))
+			err_message("Bad parameter, problem: location path");
+	}
 }
 
 void Configurations::take_location_directives(std::string name, std::string directive) 
 {
-	if (name == "root") 
+	if (name == "root")
+	{
 		loc.root = directive;
+		if (!check_string(directive))
+			err_message("Bad parameter, directive's name: root");
+	}
 	else if (name == "methods") 
 	{
 		loc.methods = std::vector<Allowed>();
@@ -316,6 +394,8 @@ void Configurations::take_location_directives(std::string name, std::string dire
 			loc.autoindex = true;
 		else if (directive == "off") 
 			loc.autoindex = false;
+		else
+			err_message("Bad parameter, directive's name: autoindex");
 	} 
 	else if (name == "auth_basic")
 	{
@@ -348,12 +428,17 @@ void Configurations::config_part() {
 			}	
 		}
 	}
+	if (!searching_checker) 
+	{
+		std::cout << "Bad string " << err_str_set_get(1)
+			<< ". Directives outside of a server-context are not allowed\n" << std::endl;
+		f_error = 1;
+	}
 }
 
 void Configurations::take_server_part()
 {
 	loc_init(0);
-	int searching_checker = 0;
 	char sym = ';';
 	if (p_config == "}")
 	{ 
@@ -372,13 +457,11 @@ void Configurations::take_server_part()
 					{
 						take_server_directives(*its, get_directive(*its));
 						location_block = 1;
-						searching_checker = 1;
 					}
 				} 
 				else if (check_end_line(sym)) 
 				{
 					take_server_directives(*its, get_directive(*its));
-					searching_checker = 1;
 					break;
 				}	
 			}
@@ -388,11 +471,11 @@ void Configurations::take_server_part()
 
 void Configurations::take_location_part()
 {
-	int searching_checker = 0;
 	char sym = ';';
 	if (p_config == "}") 
 	{
 		location_block = 0;
+		loc_map[loc.path] = loc;
 		serv.location.push_back(loc);
 	}
 	else 
@@ -402,10 +485,7 @@ void Configurations::take_location_part()
 			if (p_config.find(*itl) == 0) 
 			{
 				if (check_end_line(sym)) 
-				{
 					take_location_directives(*itl, get_directive(*itl));
-					searching_checker = 1;
-				}	
 			}
 		}
 	}
@@ -416,6 +496,22 @@ std::string Configurations::get_line()
 	return p_config;
 }
 
+int Configurations::err_str_set_get(int k) 
+{
+	if (k)
+		return f_error_str;
+	else
+	{
+		f_error_str += 1;
+		return 0;
+	}
+}
+
+int Configurations::error_found() 
+{
+	return f_error;
+}
+
 void Configurations::work(std::string file) 
 {
 	general_init();
@@ -424,6 +520,7 @@ void Configurations::work(std::string file)
 	parser_conf(file);
 	while(line_control()) 
 	{
+		err_str_set_get(0);
 		if (get_line()[0] == '#') 
 			continue;
 		else if (!is_server_block())
@@ -433,6 +530,26 @@ void Configurations::work(std::string file)
 		else if (is_server_block() && is_location_block())
 			take_location_part();
 	}
+	if (error_found() == 1) 
+		std::cout << "\n\nThe configuration file is not accepted !!!" << std::endl;
+	else 
+		std::cout << "\n\nThe configuration file accepted!" << std::endl;
+}
+
+// selective ptint just to test the "loc_map". will not delete in case we'll need it.
+std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj) 
+{
+	if (obj.root.length() > 0)
+		ostream_obj << "root:\t\t" << obj.root << ";" << std::endl;
+	if (obj.index.size() > 0) 
+	{
+		ostream_obj << "index:\t\t";
+		std::vector<std::string>::const_iterator it = obj.index.begin();
+		for (; it != obj.index.end(); ++it)
+			ostream_obj << *it << " ";
+		ostream_obj << std::endl;
+	}
+	return ostream_obj;
 }
 
 void Configurations::print_parsed() 
@@ -460,9 +577,6 @@ void Configurations::print_parsed()
 		}
 		if (!((*its)->allow).empty())
 			std::cout << "HERE ARE ALLOWS METHS :" << std::endl;
-		// else
-		// 	std::cout << "NO ALLOWS METHS" << std::endl;
-	
 		for(std::vector<Allowed>::iterator k = (*its)->allow.begin(); k != (*its)->allow.end(); k++) 
 			std::cout << "server allows >\t\t" << *k << std::endl;
 
@@ -482,9 +596,6 @@ void Configurations::print_parsed()
 			std::cout << "client_max_body_size:\t\t" << itl->client_max_body_size << std::endl;
 			if (!(itl->methods).empty())
 				std::cout << "HERE ARE LOC METHODS :" << std::endl;
-			// else
-			// 	std::cout << "NO LOC METHODS" << std::endl;
-
 			for(std::vector<Allowed>::iterator j = itl->methods.begin(); j != itl->methods.end(); j++) 
 				std::cout << "location's methods >\t\t" << *j << std::endl;
 		}

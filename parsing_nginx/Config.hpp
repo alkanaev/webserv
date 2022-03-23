@@ -9,6 +9,7 @@
 #include <vector>
 #include <fstream>
 #include <map>
+#include <algorithm>
 
 enum  Allowed
 {
@@ -62,7 +63,8 @@ class Configurations
         int    is_server_block();
         int    is_location_block();
         std::string	get_line();
-        int    check_string(std::string str);
+        int check_string(std::string str);
+        int check_err_num_page(std::string str);
         void allow_methods(std::string directive, int k);
         unsigned int	ft_stoi_unsign(std::string);
         void    parser_conf(std::string file);
@@ -81,15 +83,22 @@ class Configurations
         int get_err_num(std::string const &s);
         std::string get_err_path(std::string const &s);
         void take_index_vector(std::string directive, int k);
+        void kick_bad_methods(std::vector<std::string> tokens, std::string words[6]);
+        void err_message(std::string str);
+        int error_found();
+        int	err_str_set_get(int k);
 
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Configurations &obj);
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
+        friend std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj);
 
     private:
         Serv_block    serv;
         Loc_block    loc;
         int    server_block;
         int    location_block;
+        int f_error_str;
+        int f_error;
         std::string str_to_parse;
         std::string	str_to_conf;
         std::string	p_config;
@@ -97,6 +106,7 @@ class Configurations
         std::vector<std::string>	directives_serv;
         std::vector<std::string>	directives_loc;
         std::vector<Serv_block*>	server;
+        std::map<std::string, Loc_block> loc_map;
 };
 
 #endif
