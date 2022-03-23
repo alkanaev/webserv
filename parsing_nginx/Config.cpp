@@ -311,6 +311,9 @@ int Configurations::check_err_num_path(std::string str)
 
 int Configurations::check_redirect(std::string str)
 {
+	// if I understood right - can be any code given. 
+	// But there are the most popular code in case of redirection : 301, 302, 404.
+	// Will we filter the errors ?
 	std::string num = str.substr(0, 3);
 	std::string::const_iterator it = num.begin();
 	while (it != num.end() && std::isdigit(*it))
@@ -335,13 +338,15 @@ std::map<int,std::string> Configurations::take_redirect(std::string directive, i
 		err_message("Bad parameter, problem of redirect parameter");
 	else
 	{
+		int num = ft_stoi_unsign(directive.substr(0, 3));
+		std::string path = directive.substr(3, directive.length() - 1);
 		if (k)
 		{
-			serv.redirect[ft_stoi_unsign(directive.substr(0, 3))] = directive.substr(3, directive.length() - 1);
+			serv.redirect[num] = path;
 			return serv.redirect;
 		}
 		else 
-			loc.redirect[ft_stoi_unsign(directive.substr(0, 3))] = directive.substr(3, directive.length() - 1);
+			loc.redirect[num] = path;
 			return loc.redirect;
 	}
 	return loc.redirect;
