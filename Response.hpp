@@ -20,6 +20,10 @@ class Response
 	typedef std::map<std::string, std::string>		Headers;
 
 	private:
+	/* static data */ //should they be public ?
+	static std::map<int, std::string> __statusCode;
+	static std::map<std::string, std::string> __MIMEtypes;
+
 	/* private data */
 	Headers		_headers;
 
@@ -63,7 +67,7 @@ class Response
 		_page  = _construct_header() + _body + "\r\n";
 	}
 	private: /* private functions */
-	void	_construct () {
+	void	_construct_body () {
 		/////////
 		const LocationBlock  lblock = _server->retrive_location(
 			_request->get_host(), _request->get_uri());
@@ -77,10 +81,12 @@ class Response
 		METHODS const meth = _request->get_method();
 		if (meth == _GET) //switch
 			_get(lblock);
+		/* ------------------------   later 
 		else if (meth == _POST)
 			_post(lblock);
 		else if (meth == _DELETE)
 			_delete(lblock);
+		*/
 		else
 			_status = METHOD_NOT_ALLOWED;
 	}
@@ -92,37 +98,41 @@ class Response
 			_headers["Connection"] = "keep-alive";
 
 		if (_headers["Content-Type"] == "") {
-			if (_status != HTTP::OK)
-				_headers["Content-Type"] = get_mime_type(".html");
-			else if (_req)
-				_headers["Content-Type"] = get_mime_type(_req->get_uri());
+			if (_status != _OK)
+				_headers["Content-Type"] = __MIMEtypes[".html"];
+			else if (_request)
+				_headers["Content-Type"] = __MIMEtypes[_req->get_uri()];
 			else
-				_headers["Content-Type"] = get_mime_type("/");
+				_headers["Content-Type"] = __MIMEtypes["/"];
 		}
 		_headers["Content-Length"] = _toString(_body.size());
 		_set_header_date();
-		_headers["Server"] = WEBSERV_SERVER_VERSION;
-		#ifdef WEBSERV_BUILD_COMMIT
-			_headers["Server"] += WEBSERV_BUILD_COMMIT;
-		#endif
+		_headers["Server"] = "Webserb/v0.1";
 
 		std::stringstream head;
-		head << "HTTP/1.1 " << _status << " " << resolve_code(_status) << "\r\n";
-
+		head << "HTTP/1.1 " << _status << " " << __statusCode(_status) << "\r\n";
 		std::string headers;
 		Headers::const_iterator hit = _headers.begin();
 		for (; hit != _headers.end(); ++hit)
 			headers += hit->first + ": " + hit->second + "\r\n";
-
-		Cookies::const_iterator cit = _cookies_to_set.begin();
-		for (; cit != _cookies_to_set.end(); ++cit) {
-			if (cit->first == "Set-Cookie")
-				headers += cit->first  + ": " + cit->second + "\r\n";
-			else
-				headers += "Set-Cookie: " + cit->first + "=" + cit->second + "\r\n";
-		}
-		return head.str() + headers + "\r\n";
+		return (head.str() + headers + "\r\n");
 	}
+
+	std::string _toString(size_t size) {
+		std::stringstream ss;
+		ss << size;
+		return (ss.str());
+	}
+
+	void	_set_header_date() {
+		std::time_t t = std::time(NULL);
+		static char buf[30];
+
+		strftime(buf, sizeof(buf), "%a, %d %b %Y %T %Z", std::localtime(&t));
+		_headers["Date"] = std::string(buf);
+	}
+
+
 	/* ----------------- GET ------------------------- */
 	void	_get( LocationBlock const *lblock ) {
 		std::string const path = _build_method_path(lblock, _GET, false);
@@ -130,12 +140,12 @@ class Response
 			return ;
 
 		if (block->get_redirection() != "")
-			return ((void)_do_redirection(block)); //
+			return ((void)_do_redirection(lblock)); //
 		_get_file(lblock, path);
 	}
 
 	std::string _build_method_path( LocationBlock const *lblock,
-		METHODS  method, bool check_upload_pass ) {
+			METHODS  method, bool check_upload_pass ) {
 		std::string path;
 
 		if (lblock->is_allowed(method) == false) {
@@ -151,10 +161,10 @@ class Response
 
 	bool	_get_file( LocationBlock const *lblock,
 			std::string const &path ) {
-
 		/*
+		 * if cig != ""
 		 * need to handel cgi case => return 
-		*/
+		 */
 		if (path[path.size() - 1] == '/') /* is a dir */
 			return (_get_dir(lblock, path)); //////// return val
 
@@ -178,14 +188,63 @@ class Response
 	bool	_get_dir( LocationBlock const *lblock, std::string const &path ) {
 
 		std::vector<struct dirent> files;
-		if (!_dump_files_dir(path, &files)) //why not ref ? //
+		/* 1) get all the files in paht */
+		if (!_dump_files(path, files))
 			return (false);
+		/* 2) find the proper file whit reditection*/
 		if (_get_index(lblock, path, files))
 			return (true);
+		/* 3) */
+		/* not yet ----------------------------- Alina
 		if (lblock->is_autoindex() == true)
 			return (_get_autoindex(files, path));
+		*/
 		_status = NOT_FOUND;
 		return (false); /* usage ? */
+	}
+	bool _dump_files( std::string const &path,
+		std::vector<struct dirent> &dir_bucket ) {
+
+		errno = 0;
+		/* open the directory pointed by the path */
+		DIR	*dirptr = opendir(path.c_str());
+		if (!dirptr) { /* error set status */
+			if (errno == ENOENT)
+				_status = NOT_FOUND
+			else if (errno == EACCES || errno == EPERM)
+				_status = FORBIDDEN;
+			else
+				_status = INTERNAL_SERVER_ERROR;
+			return (false);
+		}
+
+		/* get all directory in there */
+		struct dirent *file;
+		while ((file = readdir(dirptr))) {
+			if (errno) {
+				_status = INSUFFICIENT_STORAGE;
+				closedir(dirptr);
+				return (false);
+			}
+			bucket.push_back(*file);
+		}
+		closedir(dirptr);
+		return (true);
+	}
+	bool	_get_index( LocationBlock const *lblock, std::string const &path,
+		std::vector<struct dirent> &files) {
+		LocationBlock::IndexObject indexs = lblock->get_indexs();
+		if (indexs.size() <= 0)
+			return (false);
+
+		LocationBlock::IndexObject::const_iterator it;
+		for (it = indexs.begin(); it != indexs.end(); it++) {
+			std::vector<struct dirent>::const_iterator	it_file;
+			for (it_file = files.begin(); it_file != files.end(); it_file++)
+				if (it_file->d_name == *it)
+					return _get_file(lblock, path + "/" + it_file->d_name);
+		}
+		return (false);
 	}
 
 	std::string _get_file_content( std::string const &path ) {
@@ -206,7 +265,156 @@ class Response
 		return (ss.str());
 	}
 
+	void _do_redirection( LocationBlock const *lblock ) {
+		_status = lblock->get_redirection_code();
+		_headers["Location"] = block->get_redirection();
+	}
 };
+// ------------------------------------------------------------------
+void	init_MIME_types_map( std::map<std::string, std::string> &MIMEtypes ) {
+	MIME_TYPES["aac"] = "audio/aac";
+	MIME_TYPES[".abw"] = "application/x-abiword";
+	MIME_TYPES[".arc"] = "application/x-freearc";
+	MIME_TYPES[".avi"] = "video/x-msvideo";
+	MIME_TYPES[".azw"] = "application/vnd.amazon.ebook";
+	MIME_TYPES[".bin"] = "application/octet-stream";
+	MIME_TYPES[".bmp"] = "image/bmp";
+	MIME_TYPES[".bz"] = "application/x-bzip";
+	MIME_TYPES[".bz2"] = "application/x-bzip2";
+	MIME_TYPES[".cda"] = "application/x-cdf";
+	MIME_TYPES[".csh"] = "application/x-csh";
+	MIME_TYPES[".css"] = "text/css";
+	MIME_TYPES[".csv"] = "text/csv";
+	MIME_TYPES[".doc"] = "application/msword";
+	MIME_TYPES[".docx"] =
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	MIME_TYPES[".eot"] = "application/vnd.ms-fontobject";
+	MIME_TYPES[".epub"] = "application/epub+zip";
+	MIME_TYPES[".gz"] = "application/gzip";
+	MIME_TYPES[".gif"] = "image/gif";
+	MIME_TYPES[".htm"] = "text/html";
+	MIME_TYPES[".html"] = "text/html";
+	MIME_TYPES[".ico"] = "image/vnd.microsoft.icon";
+	MIME_TYPES[".ics"] = "text/calendar";
+	MIME_TYPES[".jar"] = "application/java-archive";
+	MIME_TYPES[".jpeg"] = "image/jpeg";
+	MIME_TYPES[".jpg"] = "image/jpeg";
+	MIME_TYPES[".js"] = "text/javascript";
+	MIME_TYPES[".json"] = "application/json";
+	MIME_TYPES[".jsonld"] = "application/ld+json";
+	MIME_TYPES[".mid"] = "audio/midi";
+	MIME_TYPES[".midi"] = "audio/x-midi";
+	MIME_TYPES[".mjs"] = "text/javascript";
+	MIME_TYPES[".mp3"] = "audio/mpeg";
+	MIME_TYPES[".mp4"] = "video/mp4";
+	MIME_TYPES[".mpeg"] = "video/mpeg";
+	MIME_TYPES[".mpkg"] = "application/vnd.apple.installer+xml";
+	MIME_TYPES[".odp"] = "application/vnd.oasis.opendocument.presentation";
+	MIME_TYPES[".ods"] = "application/vnd.oasis.opendocument.spreadsheet";
+	MIME_TYPES[".odt"] = "application/vnd.oasis.opendocument.text";
+	MIME_TYPES[".oga"] = "audio/ogg";
+	MIME_TYPES[".ogv"] = "video/ogg";
+	MIME_TYPES[".ogx"] = "application/ogg";
+	MIME_TYPES[".opus"] = "audio/opus";
+	MIME_TYPES[".otf"] = "font/otf";
+	MIME_TYPES[".png"] = "image/png";
+	MIME_TYPES[".pdf"] = "application/pdf";
+	MIME_TYPES[".php"] = "application/x-httpd-php";
+	MIME_TYPES[".ppt"] = "application/vnd.ms-powerpoint";
+	MIME_TYPES[".pptx"] =
+		"application/vnd.openxmlformats-officedocument.presentationml.presentation";
+	MIME_TYPES[".rar"] = "application/x-rar-compressed";
+	MIME_TYPES[".rtf"] = "application/rtf";
+	MIME_TYPES[".sh"] = "application/x-sh";
+	MIME_TYPES[".svg"] = "image/svg+xml";
+	MIME_TYPES[".swf"] = "application/x-shockwave-flash";
+	MIME_TYPES[".tar"] = "application/x-tar";
+	MIME_TYPES[".tif"] = "image/tiff";
+	MIME_TYPES[".tiff"] = "image/tiff";
+	MIME_TYPES[".ttf"] = "font/ttf";
+	MIME_TYPES[".ts"] = "video/mp2t";
+	MIME_TYPES[".txt"] = "text/plain";
+	MIME_TYPES[".vsd"] = "application/vnd.visio";
+	MIME_TYPES[".wav"] = "audio/wav";
+	MIME_TYPES[".weba"] = "audio/webm";
+	MIME_TYPES[".webm"] = "video/webm";
+	MIME_TYPES[".webp"] = "image/webp";
+	MIME_TYPES[".woff"] = "font/woff";
+	MIME_TYPES[".woff2"] = "font/woff2";
+	MIME_TYPES[".xhtml"] = "application/xhtml+xml";
+	MIME_TYPES[".xls"] = "application/vnd.ms-excel";
+	MIME_TYPES[".xlsx"] =
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	MIME_TYPES[".xml"] = "application/xml";
+	MIME_TYPES[".xul"] = "application/vnd.mozilla.xul+xml";
+	MIME_TYPES[".zip"] = "application/zip";
+	MIME_TYPES[".3gp"] = "video/3gpp";
+	MIME_TYPES[".3g2"] = "video/3gpp2";
+	MIME_TYPES[".7z"] = "application/x-7z-compressed";
+}
 
+void	init_status_map( std::map<int, std::string> &statusCode ) {
+	statusCode[CONTINUE] = "Continue";
+	statusCode[SWITCHING_PROTOCOLS] = "Switching Protocols";
+	statusCode[PROCESSING] = "Processing";
+	statusCode[EARLY_HINTS] = "Early Hints";
+	statusCode[OK] = "OK";
+	statusCode[CREATED] = "Created";
+	statusCode[ACCEPTED] = "Accepted";
+	statusCode[NON_AUTHORITATIVE_INFORMATION] = "Non-Authoritative Information";
+	statusCode[NO_CONTENT] = "No Content";
+	statusCode[RESET_CONTENT] = "Reset Content";
+	statusCode[PARTIAL_CONTENT] = "Partial Content";
+	statusCode[MULTI_STATUS] = "Multi-Status";
+	statusCode[ALREADY_REPORTED] = "Already Reported";
+	statusCode[IM_USED] = "IM Used";
+	statusCode[MULTIPLE_CHOICES] = "Multiple Choices";
+	statusCode[MOVED_PERMANENTLY] = "Moved Permanently";
+	statusCode[FOUND] = "Found";
+	statusCode[SEE_OTHER] = "See Other";
+	statusCode[NOT_MODIFIED] = "Not Modified";
+	statusCode[USE_PROXY] = "Use Proxy";
+	statusCode[SWITCH_PROXY] = "Switch Proxy";
+	statusCode[TEMPORARY_REDIRECT] = "Temporary Redirect";
+	statusCode[PERMANENT_REDIRECT] = "Permanent Redirect";
+	statusCode[BAD_REQUEST] = "Bad Request";
+	statusCode[UNAUTHORIZED] = "Unauthorized";
+	statusCode[PAYMENT_REQUIRED] = "Payment Required";
+	statusCode[FORBIDDEN] = "Forbidden";
+	statusCode[NOT_FOUND] = "Not Found";
+	statusCode[METHOD_NOT_ALLOWED] = "Method Not Allowed";
+	statusCode[NOT_ACCEPTABLE] = "Not Acceptable";
+	statusCode[PROXY_AUTHENTICATION_REQUIRED] = "Proxy Authentication Required";
+	statusCode[REQUEST_TIMEOUT] = "Request Timeout";
+	statusCode[CONFLICT] = "Conflict";
+	statusCode[GONE] = "Gone";
+	statusCode[LENGTH_REQUIRED] = "Length Required";
+	statusCode[PRECONDITION_FAILED] = "Precondition Failed";
+	statusCode[PAYLOAD_TOO_LARGE] = "Payload Too Large";
+	statusCode[REQUEST_URI_TOO_LONG] = "Request URI Too Long";
+	statusCode[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+	statusCode[REQUESTED_RANGE_NOT_SATISFIABLE] = "Requested Range Not Satisfiable";
+	statusCode[EXPECTATION_FAILED] = "Expectation Failed";
+	statusCode[IM_A_TEAPOT] = "I'm a teapot";
+	statusCode[UNPROCESSABLE_ENTITY] = "Unprocessable Entity";
+	statusCode[LOCKED] = "Locked";
+	statusCode[FAILED_DEPENDENCY] = "Failed Dependency";
+	statusCode[UPGRADE_REQUIRED] = "Upgrade Required";
+	statusCode[PRECONDITION_REQUIRED] = "Precondition Required";
+	statusCode[TOO_MANY_REQUESTS] = "Too Many Requests";
+	statusCode[REQUEST_HEADER_FIELDS_TOO_LARGE] = "Request Header Fields Too Large";
+	statusCode[UNAVAILABLE_FOR_LEGAL_REASONS] = "Unavailable For Legal Reasons";
+	statusCode[INTERNAL_SERVER_ERROR] = "Internal Server Error";
+	statusCode[NOT_IMPLEMENTED] = "Not Implemented";
+	statusCode[BAD_GATEWAY] = "Bad Gateway";
+	statusCode[SERVICE_UNAVAILABLE] = "Service Unavailable";
+	statusCode[GATEWAY_TIMEOUT] = "Gateway Timeout";
+	statusCode[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
+	statusCode[VARIANT_ALSO_NEGOTIATES] = "Variant Also Negotiates";
+	statusCode[INSUFFICIENT_STORAGE] = "Insufficient Storage";
+	statusCode[LOOP_DETECTED] = "Loop Detected";
+	statusCode[NOT_EXTENDED] = "Not Extended";
+	statusCode[NETWORK_AUTHENTICATION_REQUIRED] = "Network Authentication Required";
+}
 #endif /* end of include guard RESPONSE_HPP */
 
