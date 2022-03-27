@@ -1,5 +1,6 @@
 NAME = parsingNGINX
 CC=c++
+FLAGS = -std=c++98
 SRC = Config.cpp main.cpp
 OBJ = $(SRC:.cpp=.o)
 %.o: %.c

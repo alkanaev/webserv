@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/27 18:31:42 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/03/27 18:54:54 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -429,7 +429,23 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	else if (name == "server_name") 
 		serv.server_name = directive;
 	else if (name == "client_max_body_size")
-		serv.client_max_body_size = ft_stoi_unsign(directive);
+	{
+		std::string::const_iterator it = directive.begin();
+		while (it != directive.end() && std::isdigit(*it))
+			++it;
+		if ((!directive.empty() && it == directive.end()))
+			serv.client_max_body_size = ft_stoi_unsign(directive);
+		
+		if ((it != directive.end()) && (next(it) == directive.end()))
+		{
+			char check = directive.back();
+			if (check == 'M')
+			{
+				directive.pop_back();
+				serv.client_max_body_size = ft_stoi_unsign(directive.append("000000"));
+			}
+		}
+	}
 	else if (name == "location")
 	{
 		loc.path = directive;
