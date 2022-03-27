@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/27 18:54:54 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/03/27 19:01:31 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -465,10 +465,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	else if (name == "return") 
 		take_redirect(directive, 0);
 	else if (name == "methods") 
-	{
-		// loc.methods = std::vector<Allowed>();
 		allow_methods(directive, 0);
-	} 
 	else if (name == "index") 
 		take_index_vector(directive, 0);
 	else if (name == "autoindex") 
