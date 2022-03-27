@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
+/*   Updated: 2022/03/27 18:11:36 by alkanaev         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
@@ -14,16 +26,13 @@
 enum  Allowed
 {
 	GET = 0,
-	PUT = 1,
-	POST = 2,
-	HEAD = 3,
-	DELETE = 4,
-	UNSUPPORTED = 5
+	POST = 1,
+	DELETE = 2,
 };
 
 struct Loc_block
 {
-	std::vector<Allowed>	methods;
+    std::vector<bool>	methods;
 	std::string    path;
     std::vector<std::string> index;
 	bool    autoindex;
@@ -32,7 +41,8 @@ struct Loc_block
 	std::string	auth_basic_user_file;
     std::string	cgi_path; // transform to std::map<std::string, std::string> (?)
 	std::string	cgi_extension; // need to know that we need exactly these chi directives
-    std::map<int,std::string> redirect;
+    int redirect_num;
+    std::string redirect_path;
 	unsigned int    client_max_body_size;
 
 	friend std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj);
@@ -40,7 +50,7 @@ struct Loc_block
 
 struct Serv_block
 {
-	std::vector<Allowed> 	allow;
+    std::vector<bool>	allow;
 	std::vector<Loc_block>	location;
 	int    port;
 	std::string    ip;
@@ -49,8 +59,11 @@ struct Serv_block
 	bool	autoindex;
 	std::string	root;
 	std::string    server_name;
-    std::map<int,std::string> redirect;
+    int redirect_num;
+    std::string redirect_path;
     std::map<int,std::string> error_page;
+    std::map<std::string, Loc_block> loc_map;
+    unsigned int    client_max_body_size;
 	
 	friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
 };
@@ -89,7 +102,7 @@ class Configurations
         void err_message(std::string str);
         int error_found();
         int	err_str_set_get(int k);
-        std::map<int,std::string> take_redirect(std::string directive, int k);
+        void take_redirect(std::string directive, int k);
         int check_redirect(std::string str);
 
         friend std::ostream &operator<<(std::ostream &ostream_obj, const Configurations &obj);
@@ -109,8 +122,7 @@ class Configurations
         std::vector<std::string>	directives_config;
         std::vector<std::string>	directives_serv;
         std::vector<std::string>	directives_loc;
-        std::vector<Serv_block*>	server;
-        std::map<std::string, Loc_block> loc_map;
+        std::vector<Serv_block>	server;
 };
 
 #endif

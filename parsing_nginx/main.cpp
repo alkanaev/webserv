@@ -16,5 +16,6 @@ int main(int ac, char **av)
 	config.work(file);
 	if (!config.error_found())
 		config.print_parsed();
+		// std::cout << config;
 
 }
