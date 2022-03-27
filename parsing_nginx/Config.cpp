@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/27 18:23:04 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/03/27 18:31:42 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -596,10 +596,7 @@ void Configurations::work(std::string file)
 		else if (is_server_block() && !is_location_block())
 			take_server_part();
 		else if (is_server_block() && is_location_block())
-		{
-			// std::cout << "LOCATION LOCATION LOCATION LOCATION LOCATION LOCATION!!!" << std::endl;
 			take_location_part();
-		}
 	}
 	if (error_found() == 1) 
 		std::cout << "\n\nThe configuration file is not accepted !!!" << std::endl;
