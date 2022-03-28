@@ -6,13 +6,8 @@
 
 #ifndef SERVERBLOCK_HPP
 # define SERVERBLOCK_HPP
-# include <string>
-# include <iostream>
-# include <unistd.h>
-# include <map>
-# include <algorithm>
-# include <vector>
 
+# include "LocationBlock.hpp"
 /*
  *  --------------------------------------------
  * | Alina's Serv_block structure                 |
