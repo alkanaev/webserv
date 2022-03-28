@@ -14,6 +14,7 @@
 # include <algorithm>
 # include <vector>
 
+
 /*
  *  --------------------------------------------
  * | Alina's Loc_block structure                |
@@ -27,7 +28,7 @@ struct Loc_block
     std::string	cgi_path; // transform to std::map<std::string, std::string> (?)
 	std::string	cgi_extension; // need to know that we need exactly these chi directives
 	std::string					path;
-	std::string					upload_path;
+	std::string					upload_pass;
 	std::string					auth_basic_user_file;
     std::string					root;
 	std::string					redirect_path;
@@ -39,7 +40,8 @@ struct Loc_block
 	bool						auth_basic;
 
 	/* whithoud cgi atm */
-	Loc_block ( Loc_block &other ):
+	Loc_block(){}
+	Loc_block ( Loc_block const &other ):
 		path(other.path),
 		upload_pass(other.upload_pass),
 		auth_basic_user_file(other.auth_basic_user_file),
@@ -53,7 +55,7 @@ struct Loc_block
 		auth_basic(other.auth_basic){}
 
 	/////// only for debuging /////////////
-	std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj);
+	friend std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj);
 };
 
 class LocationBlock: private Loc_block
@@ -69,13 +71,18 @@ class LocationBlock: private Loc_block
 		/* getter */
 		std::vector<std::string> const &get_indexs() const { return (index); }
 
-		std::string const &get_upload_pass() const { return (upload_path); }
+		std::string const &get_path() const { return (path); }
+		std::string const &get_upload_pass() const { return (upload_pass); }
 		std::string const &get_root() const { return (root); }
 		std::string const &get_redirection() const { return (redirect_path); }
 
 		size_t	get_body_limit() const { return (client_max_body_size); }
 		int	get_redirection_code() const { return (redirect_num); }
-		bool	is_allowed( METHODS const &meth ) cosnt { return (methods[meth]; }
+		bool	is_allowed( int meth ) const { return (methods[meth]); } //tmp
+		bool	get_autoindex() const { return (autoindex); }
+
+		// debug //
+		std::vector<bool> const &get_methods() const { return (methods); }
 
 	private:
         /* private methods */

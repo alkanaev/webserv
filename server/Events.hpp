@@ -8,10 +8,9 @@
 
 #define EVENTS_HPP
 
-# include "VHost.hpp"
+# include "Server.hpp"
 # include "Client.hpp"
 
-# include <vector>
 # include <unordered_map>
 # include <stdexcept>
 
@@ -25,7 +24,7 @@
 
 class Events
 {
-	typedef std::unordered_map<int, VHost*> VHostObject;
+	typedef std::unordered_map<int, Server*> ServerObject;
 	typedef std::unordered_map<int, Client*> ClientObject;
 
 	private:
@@ -34,7 +33,7 @@ class Events
 	bool			_on;
 	int				event_fd;
 
-	VHostObject		_vhost;
+	ServerObject	_vhost;
 	ClientObject	_clients;
 
 	public:
@@ -44,7 +43,7 @@ class Events
 		event_fd(-1){}
 
 	~Events () {
-		for (VHostObject::iterator it = _vhost.begin(); it != _vhost.end(); ++it)
+		for (ServerObject::iterator it = _vhost.begin(); it != _vhost.end(); ++it)
 			delete it->second;
 		for (ClientObject::iterator it =  _clients.begin(); it != _clients.end(); ++it)
 			delete it->second;
@@ -52,7 +51,7 @@ class Events
 			close(event_fd);
 	}
 
-	void	init( std::vector<serverBlock*> hosts ) {
+	void	init( std::vector<ServerBlock*> hosts ) {
 		if (!_create_kqueue())
 			throw std::runtime_error("kqueue() failed.");
 		if (!_add_hosts(hosts))
@@ -65,7 +64,7 @@ class Events
 		struct kevent	events[MAX_CONNECT];
 		int				total_event;
 
-		std::cout << "[⚙️] server running...\n";
+		std::cout << "[⚙️] server's running...\n";
 		while (_on) {
 			int nfds = kevent(event_fd, 0, 0, events, MAX_CONNECT, _timeout);
 			total_event += nfds;
@@ -80,7 +79,7 @@ class Events
 					continue ;
 				}
 				if (events[i].filter == EVFILT_READ) {
-					VHostObject::iterator it = _vhost.find(ev_fd);
+					ServerObject::iterator it = _vhost.find(ev_fd);
 					if (it != _vhost.end())
 						_handle_connection(it->second, ev_fd);
 					else
@@ -104,8 +103,8 @@ class Events
 			return (event_fd >= 0);
 	}
 
-	bool	_add_hosts( std::vector<serverBlock*> hosts ) {
-		for (std::vector<serverBlock*>::const_iterator cit = hosts.begin();
+	bool	_add_hosts( std::vector<ServerBlock*> hosts ) {
+		for (std::vector<ServerBlock*>::const_iterator cit = hosts.begin();
 				cit != hosts.end(); ++cit) {
 				if (!_addHost(*cit)) {
 				std::cerr << "unable to add " << (*cit)->get_name() << ":" <<
@@ -116,11 +115,11 @@ class Events
 		return (true);
 	}
 
-	bool	_addHost( serverBlock const *host ) {
-		VHost *new_host;
+	bool	_addHost( ServerBlock const *host ) {
+		Server *new_host;
 
 		try {
-			new_host = new VHost(*host);
+			new_host = new Server(*host);
 			if (!new_host) {
 				std::cerr << "_addHost(): alloc failed\n";
 				return (false);
@@ -173,7 +172,7 @@ class Events
 			close(ev_fd);
 	}
 
-	void	_handle_connection(serverBlock  *serv, int fd) {
+	void	_handle_connection(ServerBlock *serv, int fd) {
 		Client *client = new Client(serv, fd);
 		if (!client) {
 			std::cerr << "handle_connection(): alloc failed\n";

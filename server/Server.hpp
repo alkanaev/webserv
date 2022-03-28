@@ -1,13 +1,13 @@
 /**
  * @author      : abaudot (aimebaudot@gmail.com)
- * @file        : VHost
+ * @file        : Server
  * @created     : Wednesday Mar 16, 2022 14:06:16 CET
  */
 
 #ifndef VHOST_HPP
 # define VHOST_HPP
 
-# include "serverBlock.hpp"
+# include "ServerBlock.hpp"
 
 # include <fcntl.h>
 # include <sys/socket.h>
@@ -17,16 +17,15 @@
 
 # define MAX_CONNS 4092
 
-/* socket */
-class VHost: public serverBlock
+class Server: public ServerBlock
 {
 	private:
 		/* private data */
 		int _fd;
 	public:
 		/* constructor(s) */
-		explicit VHost ( serverBlock const &serv ):
-			serverBlock(serv), 
+		explicit Server ( ServerBlock const &serv ):
+			ServerBlock(serv), 
 			_fd(-1) {
 				_create_socket();
 				_set_noblock();
@@ -36,7 +35,7 @@ class VHost: public serverBlock
 			}
 
 		/* destructor */
-		~VHost(){}
+		~Server(){}
 		/* getter */
 		int	get_fd() { return (_fd); }
 
@@ -63,8 +62,8 @@ class VHost: public serverBlock
 		struct sockaddr_in addr;
 
 		addr.sin_family = AF_INET;
-		addr.sin_port = htons(_port);
-		addr.sin_addr.s_addr = inet_addr(_host.c_str());
+		addr.sin_port = htons(port);
+		addr.sin_addr.s_addr = inet_addr(ip.c_str());
 		if (bind(_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
 			throw std::runtime_error("bind() failed");
 	}
@@ -72,8 +71,8 @@ class VHost: public serverBlock
 	void	_listen_socket() {
 		if (listen(_fd, MAX_CONNS) == -1)
 			throw std::runtime_error("listen() failed");
-		std::cout << "[📡]" << _name << " bound on "
-			<< _host << ":" << _port << std::endl;
+		std::cout << "[📡]" << get_name()<< " bound on "
+			<< ip << ":" << get_port() << std::endl;
 	}
 };
 

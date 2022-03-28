@@ -7,7 +7,7 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "serverBlock.hpp"
+# include "ServerBlock.hpp"
 # include "Request.hpp"
 
 # include <fcntl.h>
@@ -25,7 +25,7 @@ class Client
 {
 	private:
 		/* private data */
-		serverBlock			*_serv;
+		ServerBlock			*_serv;
 
 		/* need to implement this class */
 		//response
@@ -38,7 +38,7 @@ class Client
 
 	public:
 		/* constructor */
-		Client ( serverBlock *serv, int ev_fd ):
+		Client ( ServerBlock *serv, int ev_fd ):
 			_serv(serv),
 			_request(0),
 			_addr(),

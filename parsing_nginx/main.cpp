@@ -14,8 +14,11 @@ int main(int ac, char **av)
 		exit(1); // temporary decision cause "exit" isn't allowed
 	}
 	config.work(file);
-	if (!config.error_found())
-		config.print_parsed();
+	if (error_found())
+		std::
+#ifdef DEBUG
+	print_parsed();
+#endif
 		// std::cout << config;
 
 }

@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/28 16:12:10 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/03/28 19:47:22 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,64 +24,37 @@ std::vector<std::string> Configurations::split(const std::string &str, char sep)
     return elems;
 }
 
-void Configurations::kick_bad_methods(std::vector<std::string> tokens, std::string words[6])
+/* sorry I couldnt resist :( */
+void Configurations::kick_bad_methods(std::vector<std::string> tokens )
 {
-	for (int i = 0; i < tokens.size(); i++)
-	{
-		int k = 0;
-		for (int j = 0; j < 6; j++)
-		{
-			if (tokens[i] == words[j])
-				continue;
-			else
-			{
-				k++;
-				if (k == 6)
-					err_message("Bad parameter, problem: bad method given");
-			}
-		}
-	}
+	static std::string const words[11] = 
+	{"GET", "PUT", "POST", "HEAD", "DELETE", "HEAD", "PUT", "CONNECT", "OPTIONS", "TRACE"};
+	for (size_t i = 0; i < tokens.size(); ++i)
+		if (std::find(words, words + 11, tokens[i]) == (words + 11))
+			err_message("Bad parameter, problem: bad method given");
 }
 
-void Configurations::allow_methods(std::string directive, int k) 
+void Configurations::allow_methods(std::string const &directive, int k) 
 {
-	std::string words[11] = {"GET", "PUT", "POST", "HEAD", "DELETE", "METHOD_UNKNOWN", "HEAD", "PUT", "CONNECT", "OPTIONS", "TRACE"};
-	Allowed par[6] = {GET, POST, DELETE};
-	std::string tmp;
-	tmp.clear();
-	std::string delimiter = ",";
 	std::vector<std::string> tokens = split(directive, ',');
-	kick_bad_methods(tokens, words);
-	int j = 0;
-	for (int i = 0; i < 6; i++)
-	{
-		for (int j = 0; j < tokens.size(); j++)
-		{
-			if (tokens[j] == words[i])
-			{
-				if (k)
-				{
-					if (tokens[j] == "GET")
-						serv.allow.at(GET) = true;
-					else if (tokens[j] == "POST")
-						serv.allow.at(POST) = true;
-					else if (tokens[j] == "DELETE")
-						serv.allow.at(DELETE) = true;
-					// serv.allow.insert(serv.allow.begin() + DELETE, true);
-				}
-				else
-				{
-					if (tokens[j] == "GET")
-						loc.methods.at(GET) = true;
-					else if (tokens[j] == "POST")
-						loc.methods.at(POST) = true;
-					else if (tokens[j] == "DELETE")
-						loc.methods.at(DELETE) = true;
-					// loc.methods.push_back(par[i]);
-				}
-			}
-			else
-				tmp += directive[i];
+	kick_bad_methods(tokens);
+	if (k) {
+		for (size_t i = 0; i < tokens.size(); ++i) {
+			if (tokens[i] == "GET")
+				serv.allow[GET] = true;
+			else if (tokens[i] == "POST")
+				serv.allow[POST]= true;
+			else if (tokens[i] == "DELETE")
+				serv.allow[DELETE] = true;
+		}
+	} else {
+		for (size_t i = 0; i < tokens.size(); ++i) {
+			if (tokens[i] == "GET")
+				loc.methods[GET] = true;
+			else if (tokens[i] == "POST")
+				loc.methods[POST] = true;
+			else if (tokens[i] == "DELETE")
+				loc.methods[DELETE] = true;
 		}
 	}
 }
@@ -128,14 +101,14 @@ void Configurations::serv_init()
 	serv.redirect_num = 0;
 	serv.redirect_path.clear();
 	serv.allow.resize(3, false);
-	serv.listen.clear();
+	serv._listen.clear();
 	serv.ip.clear();
 	serv.root = "/";
 	serv.index.clear();
 	serv.autoindex = false;
-	serv.port = 0;
+	serv.port = -1;
 	serv.server_name.clear();
-	serv.location = std::vector<Loc_block>();
+	//serv.location = std::vector<Loc_block>();
 	serv.client_max_body_size = 100000000;
 }
 
@@ -155,16 +128,18 @@ void Configurations::loc_init(int k)
 	loc.autoindex = false;
 	loc.auth_basic = false;
 	loc.auth_basic_user_file.clear();
+//----------- cgi --------------
 	loc.cgi_extension.clear();
 	loc.cgi_path.clear();
+// -------------
 	loc.client_max_body_size = serv.client_max_body_size;
 }
 
 std::string Configurations::get_directive(std::string str) 
 {
 	std::string directive;
-	int str_len = str.length();
-	int conf_len = p_config.length() - 1;
+	size_t str_len = str.length();
+	size_t conf_len = p_config.length() - 1;
 	for(; str_len < conf_len; str_len++) {
 		directive += p_config[str_len];
 	}
@@ -183,7 +158,6 @@ int Configurations::is_location_block()
 
 int Configurations::check_string(std::string str) 
 {
-	int len = str.length();
 	if ((str[0] == '/' || (str[0] == '.' && str[0] == '/')))
 		return 1;
 	else
@@ -193,11 +167,12 @@ int Configurations::check_string(std::string str)
 unsigned int Configurations::ft_stoi_unsign(std::string str) 
 {
 	unsigned int res = 0;
-	int len = str.length();
-	for(int i = 0; i < len; i++) {
-		if (i != 0) {
-			res *= 10;
-		}
+	size_t len = str.length();
+	for(size_t i = 0; i < len; i++) {
+		//if (i != 0) {
+		res *= 10;
+		//}
+
 		res += str[i] - '0';
 	}
 	return res;
@@ -205,12 +180,11 @@ unsigned int Configurations::ft_stoi_unsign(std::string str)
 
 void Configurations::parser_conf(std::string file)
 {
-	int len;
 	std::ifstream the_file(file);
 	while(getline(the_file, str_to_parse)) 
 	{
-		len = str_to_parse.length();
-		for (int i = 0 ; i < len; i++) 
+		size_t len = str_to_parse.length();
+		for (size_t i = 0 ; i < len; i++) 
 		{
 			if (str_to_parse[i] != ' ' && str_to_parse[i] != '\t') 
 				str_to_conf += str_to_parse[i];
@@ -222,14 +196,14 @@ void Configurations::parser_conf(std::string file)
 int Configurations::line_control() 
 {
 	p_config.clear();
-	int len = str_to_conf.length();
-	static int i = 0;
+	size_t len = str_to_conf.length();
+	static size_t i = 0;
 	if (i == len)
 		return 0;
 	for(; i < len; i++) 
 	{
 		if (str_to_conf[i] != '}' && str_to_conf[i] != '{' && str_to_conf[i] != ';') 
-	 		p_config += str_to_conf[i];
+			p_config += str_to_conf[i];
 		else if (str_to_conf[i] == '}' || str_to_conf[i] == '{' || str_to_conf[i] == ';') 
 		{
 			p_config += str_to_conf[i];
@@ -242,7 +216,7 @@ int Configurations::line_control()
 
 int Configurations::check_end_line(char i) 
 {
-	int k = (p_config.length() - 1);
+	size_t k = (p_config.length() - 1);
 	if (p_config[k] == i) 
 		return 1;
 	return 0;
@@ -254,10 +228,10 @@ void Configurations::get_ip(std::string directive)
 	int len = 0;
 	int f_pointer = 0;
 	std::string tmp;
-	for (int i = 0; i < directive.length(); i++) 
+	for (size_t i = 0; i < directive.length(); i++) 
 	{
 		if ((directive[i] >= '0' && directive[i] <= ':')
-			|| (directive[i] == '.' && the_port == 0)) 
+				|| (directive[i] == '.' && the_port == 0)) 
 		{
 			if(directive[i] == '.') 
 			{
@@ -292,11 +266,11 @@ void Configurations::get_ip(std::string directive)
 
 int Configurations::get_err_num(std::string const &s)
 {
-    std::string::size_type pos = s.find('/');
-    if (pos != std::string::npos)
-        return ft_stoi_unsign(s.substr(0, pos));
-    else
-        return ft_stoi_unsign(s);
+	std::string::size_type pos = s.find('/');
+	if (pos != std::string::npos)
+		return ft_stoi_unsign(s.substr(0, pos));
+	else
+		return ft_stoi_unsign(s);
 }
 
 std::string Configurations::get_err_path(std::string const &s)
@@ -310,18 +284,20 @@ int Configurations::check_err_num_path(std::string str)
 {
 	std::list<int> errs;
 	for (int i = 400; i < 419; i++)
-        errs.push_back(i);
+		errs.push_back(i);
 	for (int i = 421; i < 427; i++)
-        errs.push_back(i);
+		errs.push_back(i);
 	errs.push_back(428);
 	errs.push_back(429);
 	errs.push_back(431);
 	errs.push_back(451);
 	for (int i = 500; i < 509; i++)
-        errs.push_back(i);
+		errs.push_back(i);
 	errs.push_back(510);
 	errs.push_back(511);
 
+	//Bad parameter, directive's name: root / server
+    //errorpages/404.html,404
 	// check number
 	std::string num = str.substr(0, 3);
 	// check path
@@ -352,7 +328,10 @@ int Configurations::check_redirect(std::string str)
 std::map<int,std::string> Configurations::take_error_pages(std::string directive)
 {
 	if (!check_err_num_path(directive))
+	{
+		std::cout << directive << "\n";
 		err_message("Bad parameter, directive's name: error_page");
+	}
 	else
 		serv.error_page[get_err_num(directive)] = get_err_path(directive);
 	return serv.error_page;
@@ -373,7 +352,7 @@ void Configurations::take_redirect(std::string directive, int k)
 		}
 		else 
 			loc.redirect_num = num;
-			loc.redirect_path = path;
+		loc.redirect_path = path;
 	}
 }
 
@@ -383,7 +362,7 @@ void Configurations::take_index_vector(std::string directive, int k)
 	std::string tmp = directive;
 	std::string sub;
 	std::string delimiter = ".html";
-	size_t pos = 0;
+	size_t pos;
 	std::string token;
 	while ((pos = tmp.find(delimiter)) != std::string::npos) 
 	{
@@ -401,7 +380,7 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	if (name == "listen") 
 	{
 		get_ip(directive);
-		serv.listen = directive;
+		serv._listen = directive;
 	} 
 	else if (name == "return")
 		take_redirect(directive, 1);
@@ -409,7 +388,10 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	{
 		serv.root = directive;
 		if (!check_string(directive))
+		{
+			std::cout << "directive: " << directive << "\n";
 			err_message("Bad parameter, directive's name: root / server");
+		}
 	}
 	else if (name == "allow") 
 		allow_methods(directive, 1);
@@ -435,7 +417,7 @@ void Configurations::take_server_directives(std::string name , std::string direc
 			++it;
 		if ((!directive.empty() && it == directive.end()))
 			serv.client_max_body_size = ft_stoi_unsign(directive);
-		
+
 		if ((it != directive.end()) && (next(it) == directive.end()))
 		{
 			char check = directive.back();
@@ -495,19 +477,19 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	else if (name == "upload_pass")
 	{
 		if (!check_string(directive))
-			err_message("Bad parameter, directive's name: root / location");
+			err_message("Bad paportmeter, directive's name: root / location");
 		loc.upload_pass = directive;
 	}
 }
 
 void Configurations::config_part() {
 	int searching_checker = 0;
-	char sym = '{';
+//	char sym = '{';
 	serv_init();
 	for(std::vector<std::string>::iterator itc = directives_config.begin(); itc != directives_config.end(); itc++) 
 	{
 		if (p_config.find(*itc) == 0) {
-			if (check_end_line(sym)) {
+			if (check_end_line('{')) {
 				server_block = 1;
 				searching_checker = 1;
 				break;
@@ -525,11 +507,11 @@ void Configurations::config_part() {
 void Configurations::take_server_part()
 {
 	loc_init(0);
-	char sym = ';';
+//	char sym = ';';
 	if (p_config == "}")
 	{ 
 		server_block = 0;
-		server.push_back(serv);
+		server.push_back(new ServerBlock(serv)); //modif done
 	}
 	else 
 	{
@@ -545,7 +527,7 @@ void Configurations::take_server_part()
 						location_block = 1;
 					}
 				} 
-				else if (check_end_line(sym)) 
+				else if (check_end_line(';')) 
 				{
 					take_server_directives(*its, get_directive(*its));
 					break;
@@ -557,13 +539,13 @@ void Configurations::take_server_part()
 
 void Configurations::take_location_part()
 {
-	char sym = ';';
+//	char sym = ';';
 	if (p_config == "}") 
 	{
 		location_block = 0;
-		serv.loc_map[loc.path] = loc;
+		serv.locations[loc.path] = new LocationBlock(loc);
 		// all the nex loc struct we push to serv.location
-		serv.location.push_back(loc);
+		//serv.location.push_back(loc); no need anymore
 	}
 	else 
 	{
@@ -571,7 +553,7 @@ void Configurations::take_location_part()
 		{
 			if (p_config.find(*itl) == 0) 
 			{
-				if (check_end_line(sym)) 
+				if (check_end_line(';')) 
 					take_location_directives(*itl, get_directive(*itl));
 			}
 		}
@@ -587,14 +569,11 @@ int Configurations::err_str_set_get(int k)
 {
 	if (k)
 		return error_str_cnt;
-	else
-	{
-		error_str_cnt += 1;
-		return 0;
-	}
+	error_str_cnt += 1;
+	return 0;
 }
 
-int Configurations::error_found() 
+bool Configurations::error_found() 
 {
 	return error_check_point;
 }
@@ -639,63 +618,71 @@ std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj)
 	return ostream_obj;
 }
 
+static void print_LocationBlock(LocationBlock const *block) {
+	std::cout << "\n**LOC BLOCK**" << std::endl;
+	std::cout << "path:\t\t" << block->get_path() << std::endl;
+	std::cout << "index:\t\t";
+	for (size_t i = 0; i < block->get_indexs().size(); i++) 
+		std::cout << block->get_indexs()[i] << " ";
+	std::cout << std::endl;
+	std::cout << "autoindex:\t\t" << block->get_autoindex() << std::endl;
+	std::cout << "root:\t\t" << block->get_root() << std::endl;
+	std::cout << "redirect number:\t\t" << block->get_redirection_code() << std::endl;
+	std::cout << "redirect path:\t\t" << block->get_redirection() << std::endl;
+//	std::cout << "auth_basic:\t\t" << block->auth_basic << std::endl;
+//	std::cout << "auth_basic_user_file:\t\t" << itl->auth_basic_user_file << std::endl;
+//	std::cout << "cgi_extension:\t\t" << block->cgi_extension << std::endl;
+//	std::cout << "cgi_path:\t\t" << block->cgi_path << std::endl;
+	std::cout << "client_max_body_size:\t\t" << block->get_body_limit() << std::endl;
+	if (!(block->get_methods()).empty())
+		std::cout << "HERE ARE LOC METHODS :" << std::endl;
+	std::cout << "location's methods >\t\t[";
+	std::cout << block->is_allowed(GET) << " ";
+	std::cout << block->is_allowed(POST) << " ";
+	std::cout << block->is_allowed(DELETE);
+	std::cout << "]" << std::endl;
+}
+
 void Configurations::print_parsed() 
 {
 	std::cout << "__________________\n" << "serv configs num::\t\t" << server.size() << "\n__________________\n\n" << std::endl;
-	for(std::vector<Serv_block>::iterator its = server.begin(); its != server.end(); its++) 
+	for(std::vector<ServerBlock*>::const_iterator its = server.begin(); its != server.end(); its++) 
 	{
 		std::cout << "**SERVER BLOCK**" << std::endl;
-		std::cout << "__________________\n" << "loc configs num::\t\t" << its->location.size() << "\n__________________\n" << std::endl;
-		std::cout << "listen:\t\t" << its->listen << std::endl;
-		std::cout << "listen ip:\t\t" << its->ip << std::endl;
-		std::cout << "listen port:\t\t" << its->port << std::endl;
-		std::cout << "server_name:\t\t" << its->server_name << std::endl;
-		std::cout << "root:\t\t" << its->root << std::endl;
-		std::cout << "redirect number:\t\t" << its->redirect_num << std::endl;
-		std::cout << "redirect path:\t\t" << its->redirect_path << std::endl;
-		std::cout << "client_max_body_size:\t\t" << its->client_max_body_size << std::endl;
+//		std::cout << "__________________\n" << "loc configs num::\t\t" << its->location.size() << "\n__________________\n" << std::endl;
+		std::cout << "listen:\t\t" << (*its)->get_listen() << std::endl;
+		std::cout << "listen ip:\t\t" << (*its)->get_ip()<< std::endl;
+		std::cout << "listen port:\t\t" << (*its)->get_port()<< std::endl;
+		std::cout << "server_name:\t\t" << (*its)->get_name()<< std::endl;
+		std::cout << "root:\t\t" << (*its)->get_root() << std::endl;
+		std::cout << "redirect number:\t\t" << (*its)->get_redirNUm() << std::endl;
+		std::cout << "redirect path:\t\t" << (*its)->get_redirection() << std::endl;
+		std::cout << "client_max_body_size:\t\t" << (*its)->get_body_limit() << std::endl;
 		std::cout << "index:\t\t";
-		for (int i = 0; i < its->index.size(); i++) 
-			std::cout << its->index.at(i) << " ";
+		std::vector<std::string> list = (*its)->get_indexs();
+		for (size_t i = 0; i < list.size(); i++) 
+			std::cout << list[i] << " ";
 		std::cout << std::endl;
-		std::cout << "autoindex:\t\t" << its->autoindex << std::endl;
-		std::map<int,std::string>::iterator it = its->error_page.begin();
-		while(it != its->error_page.end())
+		std::cout << "autoindex:\t\t" << (*its)->get_autoindex() << std::endl;
+		Serv_block::ErrorObject const &tmp1 = (*its)->get_error_page();
+		std::map<int,std::string>::const_iterator itt = tmp1.begin();
+		while(itt != tmp1.end())
 		{
-			std::cout << "error_page\t\t" << it->first << " :: "<< it->second << std::endl;
-			it++;
+			std::cout << "error_page\t\t" << itt->first << " :: "<< itt->second << std::endl;
+			itt++;
 		}
-		if (!(its->allow).empty())
+		if (!(*its)->get_allow().empty()) // it can't be empty !
 			std::cout << "HERE ARE ALLOWS METHS :" << std::endl;
 		std::cout << "server allows >\t\t[";
-		for(std::vector<bool>::iterator k = its->allow.begin(); k != its->allow.end(); k++) 
-			std::cout << *k << " ";
+		std::cout << (*its)->get_allow()[GET] << " ";
+		std::cout << (*its)->get_allow()[POST] << " ";
+		std::cout << (*its)->get_allow()[DELETE];
 		std::cout << "]" << std::endl;
 
-		for(std::vector<Loc_block>::iterator itl = its->location.begin(); itl != its->location.end(); itl++) 
-		{
-			std::cout << "\n**LOC BLOCK**" << std::endl;
-			std::cout << "path:\t\t" << itl->path << std::endl;
-			std::cout << "index:\t\t";
-			for (int i = 0; i < itl->index.size(); i++) 
-				std::cout << itl->index.at(i) << " ";
-			std::cout << std::endl;
-			std::cout << "autoindex:\t\t" << itl->autoindex << std::endl;
-			std::cout << "root:\t\t" << itl->root << std::endl;
-			std::cout << "redirect number:\t\t" << itl->redirect_num << std::endl;
-			std::cout << "redirect path:\t\t" << itl->redirect_path << std::endl;
-			std::cout << "auth_basic:\t\t" << itl->auth_basic << std::endl;
-			std::cout << "auth_basic_user_file:\t\t" << itl->auth_basic_user_file << std::endl;
-			std::cout << "cgi_extension:\t\t" << itl->cgi_extension << std::endl;
-			std::cout << "cgi_path:\t\t" << itl->cgi_path << std::endl;
-			std::cout << "client_max_body_size:\t\t" << itl->client_max_body_size << std::endl;
-			if (!(itl->methods).empty())
-				std::cout << "HERE ARE LOC METHODS :" << std::endl;
-			std::cout << "location's methods >\t\t[";
-			for(std::vector<bool>::iterator j = itl->methods.begin(); j != itl->methods.end(); j++) 
-				std::cout << *j << " ";
-			std::cout << "]" << std::endl;
-		}
+		Serv_block::LocationObject const &tmp = (*its)->get_locations();
+		Serv_block::LocationObject::const_iterator it = tmp.begin();
+		for (; it != tmp.end(); ++it)
+			print_LocationBlock(it->second);
 		std::cout << "\n\n" << std::endl;
 	}
 }

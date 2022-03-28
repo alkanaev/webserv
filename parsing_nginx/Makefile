@@ -1,18 +1,9 @@
 NAME = parsingNGINX
-CC=c++
-FLAGS = -std=c++98
-SRC = Config.cpp main.cpp
-OBJ = $(SRC:.cpp=.o)
-%.o: %.c
-	$(CC) $(FLAGS) -c $< -o $@
 
-all: $(NAME)
-
-$(NAME): $(OBJ)
-	$(CC) $(FLAGS) -o $(NAME) $(OBJ)
-
+all:
+	clang++ -std=c++98 -I../block -I ../Server -I. main.cpp Config.cpp -o $(NAME)
 clean:
-	rm -f $(OBJ)
+	rm -f main.o Config.o
 
 fclean: clean
 	rm -f $(NAME)

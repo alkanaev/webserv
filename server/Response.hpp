@@ -27,7 +27,7 @@ class Response
 	/* private data */
 	Headers		_headers;
 
-	serverBlock	*_server;
+	ServerBlock	*_server;
 	Request 	*_request;
 
 	std::string _body;
@@ -38,7 +38,7 @@ class Response
 
 	public:
 	/* constructor */
-	Response ( serverBlock *serv, Request *request ):
+	Response ( ServerBlock *serv, Request *request ):
 		_server(serv),
 		_req(request),
 		_status(request->get_code()){}
@@ -194,11 +194,14 @@ class Response
 		/* 2) find the proper file whit reditection*/
 		if (_get_index(lblock, path, files))
 			return (true);
-		/* 3) */
-		/* not yet ----------------------------- Alina
+		/* 3) simple way: just a listing*/
+		if (lblock->is_autoindex() == true)
+			return (_get_autoindex(files));
+		/*
 		if (lblock->is_autoindex() == true)
 			return (_get_autoindex(files, path));
 		*/
+
 		_status = NOT_FOUND;
 		return (false); /* usage ? */
 	}
@@ -217,7 +220,6 @@ class Response
 				_status = INTERNAL_SERVER_ERROR;
 			return (false);
 		}
-
 		/* get all directory in there */
 		struct dirent *file;
 		while ((file = readdir(dirptr))) {
@@ -246,6 +248,11 @@ class Response
 		}
 		return (false);
 	}
+	bool	_get_autoindex( std::vector<struct dirent> const &files ) {
+		for (it_file = files.begin(); it_file != files.end(); it_file++)
+			_body += it_file->d_name + "\n";
+		return (true);
+	}
 
 	std::string _get_file_content( std::string const &path ) {
 		int fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
@@ -270,6 +277,7 @@ class Response
 		_headers["Location"] = block->get_redirection();
 	}
 };
+
 // ------------------------------------------------------------------
 void	init_MIME_types_map( std::map<std::string, std::string> &MIMEtypes ) {
 	MIME_TYPES["aac"] = "audio/aac";
@@ -395,7 +403,7 @@ void	init_status_map( std::map<int, std::string> &statusCode ) {
 	statusCode[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
 	statusCode[REQUESTED_RANGE_NOT_SATISFIABLE] = "Requested Range Not Satisfiable";
 	statusCode[EXPECTATION_FAILED] = "Expectation Failed";
-	statusCode[IM_A_TEAPOT] = "I'm a teapot";
+	statusCode[IM_A_TEAPOT] = "I'm a teapot"; //lol
 	statusCode[UNPROCESSABLE_ENTITY] = "Unprocessable Entity";
 	statusCode[LOCKED] = "Locked";
 	statusCode[FAILED_DEPENDENCY] = "Failed Dependency";
