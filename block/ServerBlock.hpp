@@ -5,23 +5,116 @@
  */
 
 #ifndef SERVERBLOCK_HPP
+# define SERVERBLOCK_HPP
+# include <string>
+# include <iostream>
+# include <unistd.h>
+# include <map>
+# include <algorithm>
+# include <vector>
 
-#define SERVERBLOCK_HPP
+/*
+ *  --------------------------------------------
+ * | Alina's Serv_block structure                 |
+ *  --------------------------------------------
+*/
+struct Serv_block
+{
+	typedef std::map<int, std::string>				ErrorObject;
+	typedef std::map<std::string, LocationBlock*>	LocationObject;
 
+	ErrorObject		error_page;
+	// will change loc_map at some point
+    std::map<std::string, Loc_block> loc_map;
+
+//	std::vector<Loc_block>	location; <- no need any more
+    std::vector<std::string> index;
+    std::vector<bool>	allow;
+	std::string			root;
+	std::string			server_name;
+	std::string			ip;
+	std::string			listen; // <- tmp maybe
+    std::string			redirect_path;
+	int					port;
+    int					redirect_num;
+	bool				autoindex;
+    unsigned int    	client_max_body_size;
+	
+	Serv_block ( Serv_block &other ):
+		error_page(other.error_page),
+		loc_map(other.loc_map),
+		index(other.index),
+		allow(other.allow),
+		root(other.root),
+		server_name(other.server_name),
+		ip(other.ip),
+		listen(other.lisent),
+		redirect_path(other.redirect_path),
+		port(other.port),
+		redirect_num(other.redirect_num),
+		autoindex(other.autoindex),
+		client_max_body_size(other.client_max_body_size){}
+	
+	/////// only for debuging /////////////
+	std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
+};
 
 class ServerBlock: protected Serv_block
 {
-	public:
-		explicit ServerBlock ( Serv_block &block ):
-			Serv_block(block){}
+	typedef std::map<std::string, ServerBlock*>	VHostsObject;
 
-		virtual ~ServerBlock ();
+	VHostsObject _vhost; //other server whit the same host name (<host>:port)
+
+	public:
+		/* constructor */
+		explicit ServerBlock ( Serv_block const &block ):
+			Serv_block(block){}
+		//default location
+
+		/* destructor (TODO) */
+		virtual ~ServerBlock (){}
 
 		/* getter */
-		std::string const &get_name() const { return (_name); }
-		std::string const &get_ip() const { return (_host); }
-		std::string const &get_root() const { return (_root); }
-		int get_port() const { return (_port); }
+		std::string const &get_name() const { return (server_name); }
+		std::string const &get_ip() const { return (ip); }
+		std::string const &get_root() const { return (root); }
+		std::string const &get_redirection const { return (redirect_path); }
+		std::vector<bool> &get_allow const { return (allow); }
+		int	get_redirNUm const { return (redirect_num); }
+		bool get_autoindex const { return (autoindex); }
+		int get_port() const { return (port); }
+
+		const LocationBlock *get_lockBlock( std::string const &host,
+					std::string const &uri ) const {
+				ServerBlock const *vhost = _get_vhost(host);
+				return (vhost->_get_lockBlock(uri));
+			}
+
+	private: /* methodes */
+
+	const serverBlock	*_get_vhost( std::string const &host ) const {
+		if (!_vhosts.size())
+			return (this);
+		std::string real_host = host;
+		int port = {-1};
+		if (real_host.find(':') != std::string::npos) {
+			real_host = real_host.substr(0, real_host.find(':'));
+			port = atoi(host.substr(host.find(':') + 1).c_str());
+		}
+		VHostsObject::const_iterator it = _vhosts.find(real_host);
+		if (it != _vhosts.end() && (port == -1 || port == it->second->get_port())) // -1 ?
+			return (it->second);
+		return (this);
+	}
+
+	const Loc_block	 *_get_lockBlock( std::string const &uri ) const {
+			std::string _uri = uri;
+			if (_uri.find("/", 1) != std::string::npos)
+				_uri = real_uri.substr(0, _uri.find("/", 1));
+			LocationObject::const_iterator it = loc_map.find(real_uri);
+			if (it != _locations.end())
+				return (it->second);
+			return (0); //change it for default_lockation :)
 };
 
 #endif /* end of include guard SERVERBLOCK_HPP */
