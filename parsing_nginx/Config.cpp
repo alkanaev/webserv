@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/27 19:01:31 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/03/28 16:12:10 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -492,6 +492,12 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		loc.cgi_path = directive;
 	else if (name == "client_max_body_size") 
 		loc.client_max_body_size = ft_stoi_unsign(directive);
+	else if (name == "upload_pass")
+	{
+		if (!check_string(directive))
+			err_message("Bad parameter, directive's name: root / location");
+		loc.upload_pass = directive;
+	}
 }
 
 void Configurations::config_part() {
