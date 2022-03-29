@@ -7,10 +7,10 @@
 NAME=ruServ
 
 CC=clang++
-INCLUDES= -I block -I parsing_nginx -I server
-CFLAGS= -std=c++98 -Wall -Werror -Wextra -O2
+INCLUDES= -I block -I parsing -I server
+CFLAGS= -std=c++98 -Wall -Werror -Wextra -g3 #debug
 
-OBJ = main.o parsing_nginx/Config.o
+OBJ = main.o parsing/Config.o server/Response.o
 
 %.o: %.cpp
 	$(CC) -c -o $@ $< $(CFLAGS) $(INCLUDES)
@@ -24,6 +24,8 @@ all: $(NAME)
 
 clean:
 	rm -f *.o
+	rm -f parsing/*.o
+	rm -f server/*.o
 fclean: clean
 	rm -f $(NAME)
 re: fclean

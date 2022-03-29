@@ -9,6 +9,7 @@
 
 # include "ServerBlock.hpp"
 # include "Request.hpp"
+# include "Response.hpp"
 
 # include <fcntl.h>
 # include <sys/socket.h>
@@ -27,10 +28,8 @@ class Client
 		/* private data */
 		ServerBlock			*_serv;
 
-		/* need to implement this class */
-		//response
-		/* ----- */
 		Request				*_request;
+		Response			*_response;
 		struct sockaddr_in	_addr;
 		struct timeval		_ping;
 		socklen_t			_addrln;
@@ -41,6 +40,7 @@ class Client
 		Client ( ServerBlock *serv, int ev_fd ):
 			_serv(serv),
 			_request(0),
+			_response(0),
 			_addr(),
 			_addrln(),
 			_fd(-1) {
@@ -62,6 +62,8 @@ class Client
 				close(_fd);
 			if (_request)
 				delete _request;
+			if (_response)
+				delete _response;
 		}
 
 		/* getter */
@@ -92,15 +94,18 @@ class Client
 
 		/* tmp */
 		bool	send_response() {
-			/* so far default response.... */
-			if (send(_fd, RESPONSE, strlen(RESPONSE), 0) == -1) {
+			if (_response)
+				delete _response;
+			_response = new Response(_serv, _request); //not sure need to malloc
+			_response->build();
+			if (send(_fd, _response->get_response(), _response->size(), 0) == -1) {
 				std::cerr << "send(): failed\n";
 				return (true);
 			}
-			return (true);
+			return (_close());
 		}
 
-			private: 
+	private: 
 		/* private functions */
 		READ	_read_status() {
 			if (!_request->header_ready()) {
@@ -113,7 +118,7 @@ class Client
 			if (_request->get_method() == _POST && !_request->read_body())
 				return (READ_WAIT);
 			//////// debug /////////
-			_request->print();
+			//_request->print();
 			//////////////////////
 			return (READ_OK);
 		}
@@ -121,6 +126,16 @@ class Client
 		std::string const get_ip() {
 			getpeername(_fd, (struct sockaddr *)&_addr, &_addrln);
 			return (inet_ntoa(_addr.sin_addr));
+		}
+
+		bool	_close() {
+			if (_request) {
+				bool state = _request->closed();
+				delete _request;
+				_request = 0;
+				return (state);
+			}
+			return (true);
 		}
 };
 

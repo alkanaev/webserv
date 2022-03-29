@@ -8,8 +8,8 @@
 # define REQUEST_HPP
 
 # include "enum.hpp"
-
 # include <unordered_map>
+# include <iostream> /*debug*/
 # include <string>
 
 # define HEADER_READY 1
@@ -111,9 +111,12 @@ class Request
 
 		/* getter */
 		METHODS	get_method() const { return _method; }
+		std::string const &get_raw() const { return _raw; }
 		std::string const &get_uri() const { return _uri; }
 		std::string const &get_query() const { return _query; }
 		std::string const &get_host() const { return _host; }
+
+		STATUS_CODE	get_code() const { return _code; }
 		bool	header_ready() const { return ((_status & HEADER_READY)); } /* init success */
 		bool	have_read_enought() const { return (_raw.find("\r\n\r\n") != std::string::npos); }
 		/* methods */

@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/29 13:46:37 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/03/29 17:30:05 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,10 @@ class Configurations
 		std::vector<ServerBlock*>	get_server() {
 			_handle_vhost();
 			return (server);
+		}
+
+		~Configurations() {
+			std::cout << "±±±±±±±±±±±±±±±±\n";
 		}
 
 		/* --------- alina's aka parsing functions -------- */
