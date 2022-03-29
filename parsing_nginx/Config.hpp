@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/28 19:27:06 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/03/29 13:46:37 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,11 @@
 
 # include "ServerBlock.hpp"
 
-#include <stdlib.h> /* why ? */
-#include <list> /* why ? */
+#include <stdlib.h>
+#include <list> /* list of errors */
 #include <fstream>
 
-enum  Allowed
+enum  Allowed //<=== remove that in the near futur
 {
 	GET = 0,
 	POST = 1,
@@ -35,15 +35,22 @@ class Configurations
 		Configurations( int ac, char **av ) {
 			if (ac != 2)
 				throw std::invalid_argument("**Plese, give a path to a config as argument**");
+			std::cout << "\n[🏊] Parsing our .conf file...\n";
 			work(av[1]);
 			if (error_found())
 				throw std::invalid_argument("Bad Configuration File");
 #ifdef DEBUG
 			print_parsed();
 #endif
-		} //tmp
+		}
 
-		std::vector<ServerBlock*>	get_server() { return (server); }
+		/* payload */
+		std::vector<ServerBlock*>	get_server() {
+			_handle_vhost();
+			return (server);
+		}
+
+		/* --------- alina's aka parsing functions -------- */
 
 		std::vector<std::string> split(const std::string &str, char sep);
 		void	general_init();
@@ -72,7 +79,6 @@ class Configurations
 		int get_err_num(std::string const &s);
 		std::string get_err_path(std::string const &s);
 		void take_index_vector(std::string directive, int k);
-		//void kick_bad_methods(std::vector<std::string> tokens, std::string words[6]);
 		void kick_bad_methods(std::vector<std::string> tokens);
 		void err_message(std::string str);
 		bool error_found();
@@ -84,7 +90,7 @@ class Configurations
 		friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
 		friend std::ostream &operator<<(std::ostream &ostream_obj, const Loc_block &obj);
 
-	private:
+	private: /* data */
 		Serv_block    serv;
 		Loc_block    loc;
 		int    server_block;
@@ -98,6 +104,26 @@ class Configurations
 		std::vector<std::string>	directives_serv;
 		std::vector<std::string>	directives_loc;
 		std::vector<ServerBlock*>	server;
+
+		/* method */
+
+		void _handle_vhost() {
+			if (server.size() == 0)
+				return ;
+			std::vector<ServerBlock*>::const_iterator it = server.begin();
+			for (; it != server.end(); ++it) {
+				std::vector<ServerBlock*>::const_iterator it2 = it + 1;
+				for (; it2 != server.end(); it2++) {
+					if ((*it)->get_port() == (*it2)->get_port() &&
+							(*it)->get_ip() == (*it2)->get_ip()) {
+						(*it)->absorb(*it2);
+						//delete (*it2);
+						server.erase(it2);
+						--it2;
+					}
+				}
+			}
+		}
 };
 
 #endif

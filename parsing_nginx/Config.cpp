@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/28 19:47:22 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/03/29 13:40:08 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -597,9 +597,9 @@ void Configurations::work(std::string file)
 			take_location_part();
 	}
 	if (error_found() == 1) 
-		std::cout << "\n\nThe configuration file is not accepted !!!" << std::endl;
+		std::cout << "[💥] The configuration file is not accepted !!!" << std::endl;
 	else 
-		std::cout << "\n\nThe configuration file accepted!" << std::endl;
+		std::cout << "[☀️]] The configuration file accepted!\n";
 }
 
 //selective ptint just to test the "loc_map". will not delete in case we'll need it.

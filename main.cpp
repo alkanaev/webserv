@@ -24,7 +24,9 @@ int main ( int ac, char ** av )
 	struct timespec timeout;
 	timeout.tv_sec = 1;
 	timeout.tv_nsec = 0;
-
+	std::cout << "\n--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n";
+	std::cout << "         🪐    WEEBSERV   🚀           \n";
+	std::cout << "--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n\n";
 	/* Event handler */
 	Events events(&timeout);
 	try {

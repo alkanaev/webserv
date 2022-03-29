@@ -102,6 +102,12 @@ class ServerBlock: protected Serv_block
 				return (vhost->_get_lockBlock(uri));
 			}
 
+	void absorb( ServerBlock *lhs ) {
+		std::string name = lhs->get_name();
+		_vhosts.insert(std::pair<std::string, ServerBlock *>(
+			_strtolower(name), lhs));
+		}
+
 	private: /* methodes */
 
 	const ServerBlock	*_get_vhost( std::string const &host ) const {
@@ -127,6 +133,13 @@ class ServerBlock: protected Serv_block
 			if (it != locations.end())
 				return (it->second);
 			return (0); //change it for default_lockation :)
+	}
+
+	/* remove one day... cleaning */
+	std::string &_strtolower( std::string &s ) {
+		for (std::string::iterator it = s.begin(); it != s.end(); it++)
+			*it = std::tolower(*it);
+		return (s);
 	}
 };
 
