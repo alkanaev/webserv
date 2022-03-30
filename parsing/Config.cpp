@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/29 13:40:08 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/03/30 14:07:08 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -426,6 +426,8 @@ void Configurations::take_server_directives(std::string name , std::string direc
 				directive.pop_back();
 				serv.client_max_body_size = ft_stoi_unsign(directive.append("000000"));
 			}
+			else
+				err_message("Bad parameter, value of client_max_body_size isn't valid");
 		}
 	}
 	else if (name == "location")
