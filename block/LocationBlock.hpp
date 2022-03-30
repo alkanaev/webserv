@@ -7,6 +7,8 @@
 #ifndef LOCATIONBLOCK_HPP
 # define LOCATIONBLOCK_HPP
 
+# include "enum.hpp"
+
 # include <unistd.h>
 # include <string>
 # include <iostream>

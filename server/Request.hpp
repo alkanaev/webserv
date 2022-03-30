@@ -88,7 +88,7 @@ class Request
 		/* destructor */
 		~Request () {}
 
-		/* for debug only */
+		/* ---------- for debug only ------------- */
 		void	print() const {
 			std::cout << "-------------------------------------------\n\n";
 			std::cout << BLUE << "Host: " << EOCC << _host << "\n";
@@ -115,10 +115,13 @@ class Request
 		std::string const &get_uri() const { return _uri; }
 		std::string const &get_query() const { return _query; }
 		std::string const &get_host() const { return _host; }
-
+		std::string const &get_header_field(std::string const &key) {
+			return (_headers[key]);
+		}
 		STATUS_CODE	get_code() const { return _code; }
-		bool	header_ready() const { return ((_status & HEADER_READY)); } /* init success */
+		bool	header_ready() const { return ((_status & HEADER_READY)); }
 		bool	have_read_enought() const { return (_raw.find("\r\n\r\n") != std::string::npos); }
+
 		/* methods */
 		void	add_buffer( std::string const &buffer ) {
 			_raw += buffer;
@@ -131,7 +134,7 @@ class Request
 				return (false);
 			if (!_check_version())
 				return (false);
-			if (!_extract_headers(&_headers))
+			if (!_extract_headers())
 				return (false);
 			if (!_validate_host())
 				return (false);
@@ -308,7 +311,7 @@ class Request
 	/* ... */
 	/* Accept-Encoding: gzip, deflate, br */
 	/* Accept-Language: en-US,en;q=0.9 */
-	bool	_extract_headers(Headers *bucket) {
+	bool	_extract_headers() {
 		size_t header_size = 0;
 		size_t	tmp  = _raw.find("\r\n", _separator_pos);
 
@@ -323,7 +326,7 @@ class Request
 			//if (header_name != "cookie")
 			_strtolower(&header_value); //maybe not
 	//		_trim(&header_value);
-			(*bucket)[header_name] = header_value;
+			_headers[header_name] = header_value;
 			if (header_name == "host")
 				_host = header_value;
 			_separator_pos = tmp + 2;

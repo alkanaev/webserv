@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/29 17:30:05 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/03/30 15:10:39 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,14 @@
 #include <list> /* list of errors */
 #include <fstream>
 
+/*
 enum  Allowed //<=== remove that in the near futur
 {
 	GET = 0,
 	POST = 1,
 	DELETE = 2,
 };
+*/
 
 class Configurations
 {
@@ -35,7 +37,8 @@ class Configurations
 		Configurations( int ac, char **av ) {
 			if (ac != 2)
 				throw std::invalid_argument("**Plese, give a path to a config as argument**");
-			std::cout << "\n[🏊] Parsing our .conf file...\n";
+			std::cout << "\n±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±\n";
+			std::cout << "[🏊] Parsing our .conf file...\n";
 			work(av[1]);
 			if (error_found())
 				throw std::invalid_argument("Bad Configuration File");
@@ -51,7 +54,7 @@ class Configurations
 		}
 
 		~Configurations() {
-			std::cout << "±±±±±±±±±±±±±±±±\n";
+			std::cout << "±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±\n";
 		}
 
 		/* --------- alina's aka parsing functions -------- */
