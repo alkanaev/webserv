@@ -1,14 +1,14 @@
 /******************************************************************************
-*             _/((		@author		: abaudot (aimebaudot@gmail.com)		  *
-*    _.---. .'   `\		@created	: Thursday Mar 24, 2022 15:27:10 CET,	  *
-*  .'      `     ^ T=	@filename	: Response		 \)\_					  *
-* /     \       .--'						        /    '. .---._            *
-*|      /       )'-.			                  =P ^     `      '.          *
-*; ,   __..-(   '-.)				               `--.       /     \         *
-* \ \-.__)    ``--._)				               .-'(       \      |        *
-*  '.'-.__.-.						              (.-'   )-..__>   , ;        *
-*    '-...-'                                      (_.--``    (__.-/ /         *
-*******************************************************************************/
+ *             _/((		@author		: abaudot (aimebaudot@gmail.com)		  *
+ *    _.---. .'   `\		@created	: Thursday Mar 24, 2022 15:27:10 CET,	  *
+ *  .'      `     ^ T=	@filename	: Response		 \)\_					  *
+ * /     \       .--'						        /    '. .---._            *
+ *|      /       )'-.			                  =P ^     `      '.          *
+ *; ,   __..-(   '-.)				               `--.       /     \         *
+ * \ \-.__)    ``--._)				               .-'(       \      |        *
+ *  '.'-.__.-.						              (.-'   )-..__>   , ;        *
+ *    '-...-'                                      (_.--``    (__.-/ /         *
+ *******************************************************************************/
 
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
@@ -66,8 +66,10 @@ class Response
 			_construct_body();
 		if (_status >= BAD_REQUEST) {
 			if (_request) {
-				_body = _server->get_error_page(_status,
+				std::string path = _server->get_error_page(_status,
 						_request->get_host()); //so far
+				if (path != "")
+					_body = _get_file_content(path, false);
 				if (_body == "")
 					_body = _generate_status_page(_status);
 			} else {
@@ -83,7 +85,7 @@ class Response
 	void	_construct_body () {
 		/////////
 		const LocationBlock  *lblock = _server->get_lockBlock(
-			_request->get_host(), _request->get_uri());
+				_request->get_host(), _request->get_uri());
 		/////////
 		if (lblock->get_body_limit() < _request->get_raw().size()) {// if !lb
 			_status = PAYLOAD_TOO_LARGE;
@@ -94,11 +96,11 @@ class Response
 		if (meth == _GET) //switch
 			_get(lblock);
 		/* ------------------------   later 
-		else if (meth == _POST)
-			_post(lblock);
-		else if (meth == _DELETE)
-			_delete(lblock);
-		*/
+		   else if (meth == _POST)
+		   _post(lblock);
+		   else if (meth == _DELETE)
+		   _delete(lblock);
+		   */
 		else
 			_status = METHOD_NOT_ALLOWED;
 	}
@@ -193,7 +195,7 @@ class Response
 		/*type of file: 0170000 */
 		if ((st.st_mode & S_IFMT) == S_IFDIR)
 			return (_get_dir(lblock, _request->get_uri()));
-		_body = _get_file_content(path);
+		_body = _get_file_content(path, true);
 		return (true);
 	}
 
@@ -213,7 +215,7 @@ class Response
 		return (false); /* usage ? */
 	}
 	bool _dump_files( std::string const &path,
-		std::vector<struct dirent> &dir_bucket ) {
+			std::vector<struct dirent> &dir_bucket ) {
 
 		errno = 0;
 		/* open the directory pointed by the path */
@@ -241,7 +243,7 @@ class Response
 		return (true);
 	}
 	bool	_get_index( LocationBlock const *lblock, std::string const &path,
-		std::vector<struct dirent> &files) {
+			std::vector<struct dirent> &files) {
 		LocationBlock::IndexObject const &indexs = lblock->get_indexs();
 		if (indexs.size() <= 0)
 			return (false);
@@ -264,12 +266,14 @@ class Response
 		return (true);
 	}
 
-	std::string _get_file_content( std::string const &path ) {
+	std::string _get_file_content( std::string const &path, bool stat ) {
 		int fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
 		if (fd == -1) {
+			if (stat) {
 			if (errno == EACCES)
 				_status = FORBIDDEN;
 			_status = INTERNAL_SERVER_ERROR;
+			}
 			return ("");
 		}
 
@@ -320,4 +324,3 @@ class Response
 
 // ------------------------------------------------------------------
 #endif /* end of include guard RESPONSE_HPP */
-
