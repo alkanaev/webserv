@@ -15,6 +15,8 @@
 # include "Request.hpp"
 # include "ServerBlock.hpp"
 
+#include <typeinfo>
+
 
 # include <sstream> /*stringstream*/
 # include <dirent.h> /* opendir */
@@ -259,9 +261,11 @@ class Response
 	}
 	bool	_get_autoindex( std::vector<struct dirent> const &files ) {
 		std::vector<struct dirent>::const_iterator it_file = files.begin();
-		for (; it_file != files.end(); it_file++) {
-			_body += it_file->d_name;
-			_body += "\n";
+		for (; it_file != files.end(); it_file++)
+		{
+			_body += "<html>\n<head><title>Autoindex</title></head>\n";
+			_body += "<a href=\"" + std::string(it_file->d_name) + "\">" + std::string(it_file->d_name) + "</a>" + "<br>\n"; 
+			_body += "\n</html>\n";
 		}
 		return (true);
 	}
