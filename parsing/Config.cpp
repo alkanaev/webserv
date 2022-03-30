@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/30 14:07:08 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/03/30 18:29:21 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,20 +41,20 @@ void Configurations::allow_methods(std::string const &directive, int k)
 	if (k) {
 		for (size_t i = 0; i < tokens.size(); ++i) {
 			if (tokens[i] == "GET")
-				serv.allow[GET] = true;
+				serv.allow[_GET] = true;
 			else if (tokens[i] == "POST")
-				serv.allow[POST]= true;
+				serv.allow[_POST]= true;
 			else if (tokens[i] == "DELETE")
-				serv.allow[DELETE] = true;
+				serv.allow[_DELETE] = true;
 		}
 	} else {
 		for (size_t i = 0; i < tokens.size(); ++i) {
 			if (tokens[i] == "GET")
-				loc.methods[GET] = true;
+				loc.methods[_GET] = true;
 			else if (tokens[i] == "POST")
-				loc.methods[POST] = true;
+				loc.methods[_POST] = true;
 			else if (tokens[i] == "DELETE")
-				loc.methods[DELETE] = true;
+				loc.methods[_DELETE] = true;
 		}
 	}
 }
@@ -486,7 +486,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 
 void Configurations::config_part() {
 	int searching_checker = 0;
-//	char sym = '{';
+	//	char sym = '{';
 	serv_init();
 	for(std::vector<std::string>::iterator itc = directives_config.begin(); itc != directives_config.end(); itc++) 
 	{
@@ -509,7 +509,7 @@ void Configurations::config_part() {
 void Configurations::take_server_part()
 {
 	loc_init(0);
-//	char sym = ';';
+	//	char sym = ';';
 	if (p_config == "}")
 	{ 
 		server_block = 0;
@@ -541,7 +541,7 @@ void Configurations::take_server_part()
 
 void Configurations::take_location_part()
 {
-//	char sym = ';';
+	//	char sym = ';';
 	if (p_config == "}") 
 	{
 		location_block = 0;
@@ -631,17 +631,17 @@ static void print_LocationBlock(LocationBlock const *block) {
 	std::cout << "root:\t\t" << block->get_root() << std::endl;
 	std::cout << "redirect number:\t\t" << block->get_redirection_code() << std::endl;
 	std::cout << "redirect path:\t\t" << block->get_redirection() << std::endl;
-//	std::cout << "auth_basic:\t\t" << block->auth_basic << std::endl;
-//	std::cout << "auth_basic_user_file:\t\t" << itl->auth_basic_user_file << std::endl;
-//	std::cout << "cgi_extension:\t\t" << block->cgi_extension << std::endl;
-//	std::cout << "cgi_path:\t\t" << block->cgi_path << std::endl;
+	//	std::cout << "auth_basic:\t\t" << block->auth_basic << std::endl;
+	//	std::cout << "auth_basic_user_file:\t\t" << itl->auth_basic_user_file << std::endl;
+	//	std::cout << "cgi_extension:\t\t" << block->cgi_extension << std::endl;
+	//	std::cout << "cgi_path:\t\t" << block->cgi_path << std::endl;
 	std::cout << "client_max_body_size:\t\t" << block->get_body_limit() << std::endl;
 	if (!(block->get_methods()).empty())
 		std::cout << "HERE ARE LOC METHODS :" << std::endl;
 	std::cout << "location's methods >\t\t[";
-	std::cout << block->is_allowed(GET) << " ";
-	std::cout << block->is_allowed(POST) << " ";
-	std::cout << block->is_allowed(DELETE);
+	std::cout << block->is_allowed(_GET) << " ";
+	std::cout << block->is_allowed(_POST) << " ";
+	std::cout << block->is_allowed(_DELETE);
 	std::cout << "]" << std::endl;
 }
 
@@ -651,7 +651,7 @@ void Configurations::print_parsed()
 	for(std::vector<ServerBlock*>::const_iterator its = server.begin(); its != server.end(); its++) 
 	{
 		std::cout << "**SERVER BLOCK**" << std::endl;
-//		std::cout << "__________________\n" << "loc configs num::\t\t" << its->location.size() << "\n__________________\n" << std::endl;
+		//		std::cout << "__________________\n" << "loc configs num::\t\t" << its->location.size() << "\n__________________\n" << std::endl;
 		std::cout << "listen:\t\t" << (*its)->get_listen() << std::endl;
 		std::cout << "listen ip:\t\t" << (*its)->get_ip()<< std::endl;
 		std::cout << "listen port:\t\t" << (*its)->get_port()<< std::endl;
@@ -676,9 +676,9 @@ void Configurations::print_parsed()
 		if (!(*its)->get_allow().empty()) // it can't be empty !
 			std::cout << "HERE ARE ALLOWS METHS :" << std::endl;
 		std::cout << "server allows >\t\t[";
-		std::cout << (*its)->get_allow()[GET] << " ";
-		std::cout << (*its)->get_allow()[POST] << " ";
-		std::cout << (*its)->get_allow()[DELETE];
+		std::cout << (*its)->get_allow()[_GET] << " ";
+		std::cout << (*its)->get_allow()[_POST] << " ";
+		std::cout << (*its)->get_allow()[_DELETE];
 		std::cout << "]" << std::endl;
 
 		Serv_block::LocationObject const &tmp = (*its)->get_locations();

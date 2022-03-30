@@ -1,13 +1,13 @@
 /******************************************************************************
  *             _/((		@author		: abaudot (aimebaudot@gmail.com)		  *
- *    _.---. .'   `\		@created	: Thursday Mar 24, 2022 15:27:10 CET,	  *
+ *    _.---. .'   `\		@created	: Thursday Mar 24, 2022 15:27:10 CET, *
  *  .'      `     ^ T=	@filename	: Response		 \)\_					  *
  * /     \       .--'						        /    '. .---._            *
  *|      /       )'-.			                  =P ^     `      '.          *
  *; ,   __..-(   '-.)				               `--.       /     \         *
  * \ \-.__)    ``--._)				               .-'(       \      |        *
  *  '.'-.__.-.						              (.-'   )-..__>   , ;        *
- *    '-...-'                                      (_.--``    (__.-/ /         *
+ *    '-...-'                                      (_.--``    (__.-/ /        *
  *******************************************************************************/
 
 #ifndef RESPONSE_HPP
@@ -15,13 +15,12 @@
 # include "Request.hpp"
 # include "ServerBlock.hpp"
 
-#include <typeinfo>
-
 
 # include <sstream> /*stringstream*/
 # include <dirent.h> /* opendir */
 #include <fcntl.h> /* open */
 # include <sys/stat.h> /* stat function */
+# include <fstream> /* offstream */
 
 class Response
 {
@@ -29,8 +28,7 @@ class Response
 	typedef std::map<int, std::string>				StatusMap;
 	typedef std::map<std::string, std::string>		TypeMap;;
 
-	private:
-	/* static data */ //should they be public ?
+	private: /* static data */
 	static StatusMap _initStatusMap();
 	static StatusMap __statusCode;
 	static TypeMap	_initTypeMap();
@@ -43,10 +41,9 @@ class Response
 	Request 	*_request;
 
 	std::string _body;
-	std::string _page;
+	std::string _page; //payload
 
 	int			_status;
-	//maby I will end up adding a LocationBlock
 
 	public:
 	/* constructor */
@@ -69,7 +66,7 @@ class Response
 		if (_status >= BAD_REQUEST) {
 			if (_request) {
 				std::string path = _server->get_error_page(_status,
-						_request->get_host()); //so far
+						_request->get_host());
 				if (path != "")
 					_body = _get_file_content(path, false);
 				if (_body == "")
@@ -82,31 +79,45 @@ class Response
 	}
 
 	const char *get_response() const { return _page.c_str(); }
+
 	size_t	size() const { return _page.size(); }
+
+
 	private: /* private functions */
+
 	void	_construct_body () {
-		/////////
 		const LocationBlock  *lblock = _server->get_lockBlock(
 				_request->get_host(), _request->get_uri());
-		/////////
-		if (lblock->get_body_limit() < _request->get_raw().size()) {// if !lb
+		if (lblock->get_body_limit() < _request->get_raw().size()) {
 			_status = PAYLOAD_TOO_LARGE;
 			return ;
 		}
 
-		METHODS const meth = _request->get_method();
-		if (meth == _GET) //switch
-			_get(lblock);
-		/* ------------------------   later 
-		   else if (meth == _POST)
-		   _post(lblock);
-		   else if (meth == _DELETE)
-		   _delete(lblock);
-		   */
-		else
-			_status = METHOD_NOT_ALLOWED;
+		switch (_request->get_method()) {
+			case _GET:
+				_get(lblock); break;
+			case _POST:
+				_post(lblock); break;
+			case _DELETE:
+				_delete(lblock); break;
+			default:
+				_status = METHOD_NOT_ALLOWED;
+		}
 	}
 
+	/* --------- Header Generation ------- */
+	static std::string _toString( size_t size ) { /* only used in _construct_header */
+		std::stringstream ss;
+		ss << size;
+		return (ss.str());
+	}
+	void	_set_header_date() { /* only used int _construct_header */
+		std::time_t t = std::time(NULL);
+		static char buf[30];
+
+		strftime(buf, sizeof(buf), "%a, %d %b %Y %T %Z", std::localtime(&t));
+		_headers["Date"] = std::string(buf);
+	}
 	std::string _construct_header () {
 		if (!_request || (_request &&_request->closed()))
 			_headers["Connection"] = "closed";
@@ -133,33 +144,8 @@ class Response
 			headers += hit->first + ": " + hit->second + "\r\n";
 		return (head.str() + headers + "\r\n");
 	}
-
-	std::string _toString( size_t size ) {
-		std::stringstream ss;
-		ss << size;
-		return (ss.str());
-	}
-
-	void	_set_header_date() {
-		std::time_t t = std::time(NULL);
-		static char buf[30];
-
-		strftime(buf, sizeof(buf), "%a, %d %b %Y %T %Z", std::localtime(&t));
-		_headers["Date"] = std::string(buf);
-	}
-
-
-	/* ----------------- GET ------------------------- */
-	void	_get( LocationBlock const *lblock ) {
-		std::string const path = _build_method_path(lblock, _GET, false);
-		if (path == "")
-			return ;
-
-		if (lblock->get_redirection() != "")
-			return ((void)_do_redirection(lblock)); //
-		_get_file(lblock, path);
-	}
-
+	
+	/* Commun for  all method: build the requested path */
 	std::string _build_method_path( LocationBlock const *lblock,
 			METHODS  method, bool check_upload_pass ) {
 		std::string path;
@@ -173,6 +159,17 @@ class Response
 		else
 			path = lblock->get_root();
 		return (path + _request->get_uri());
+	}
+
+	/* ----------------- GET Method --------------------- */
+	void	_get( LocationBlock const *lblock ) {
+		std::string const path = _build_method_path(lblock, _GET, false);
+		if (path == "")
+			return ;
+
+		if (lblock->get_redirection() != "")
+			return ((void)_do_redirection(lblock)); //
+		_get_file(lblock, path);
 	}
 
 	bool	_get_file( LocationBlock const *lblock,
@@ -262,11 +259,11 @@ class Response
 	bool	_get_autoindex( std::vector<struct dirent> const &files ) {
 		std::vector<struct dirent>::const_iterator it_file = files.begin();
 		for (; it_file != files.end(); it_file++)
-		{
-			_body += "<html>\n<head><title>Autoindex</title></head>\n";
-			_body += "<a href=\"" + std::string(it_file->d_name) + "\">" + std::string(it_file->d_name) + "</a>" + "<br>\n"; 
-			_body += "\n</html>\n";
-		}
+ 		{
+ 			_body += "<html>\n<head><title>Autoindex</title></head>\n";
+ 			_body += "<a href=\"" + std::string(it_file->d_name) + "\">" + std::string(it_file->d_name) + "</a>" + "<br>\n";
+ 			_body += "\n</html>\n";
+ 		}
 		return (true);
 	}
 
@@ -274,9 +271,9 @@ class Response
 		int fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
 		if (fd == -1) {
 			if (stat) {
-			if (errno == EACCES)
-				_status = FORBIDDEN;
-			_status = INTERNAL_SERVER_ERROR;
+				if (errno == EACCES)
+					_status = FORBIDDEN;
+				_status = INTERNAL_SERVER_ERROR;
 			}
 			return ("");
 		}
@@ -294,6 +291,130 @@ class Response
 		_status = lblock->get_redirection_code();
 		_headers["Location"] = lblock->get_redirection();
 	}
+
+	/* ----------- POST Method ------------ */
+
+	/* POST /upload?upload_progress_id=12344 HTTP/1.1
+		Host: localhost:3000
+		Content-Length: 1325
+		Origin: http://localhost:3000
+		... other headers ...
+		Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryePkpFF7tjBAqx29L
+		------WebKitFormBoundaryePkpFF7tjBAqx29L
+		Content-Disposition: form-data; name="MAX_FILE_SIZE"
+
+			100000
+		------WebKitFormBoundaryePkpFF7tjBAqx29L
+		Content-Disposition: form-data; name="uploadedfile"; filename="hello.o"
+		Content-Type: application/x-object
+
+		... contents of file goes here ...
+		------WebKitFormBoundaryePkpFF7tjBAqx29L--
+	*/
+	void	_post( LocationBlock const *lblock ) {
+		const std::string path = _build_method_path(lblock, _POST, true);
+		if (path == "")
+			return ;
+		// cgi //
+		_handle_upload(lblock, path);
+	}
+	void
+		_handle_upload( LocationBlock const *block, std::string const &path ) {
+
+			if (block->get_upload_pass() == "") {
+				_status = FORBIDDEN;
+				return ;
+			}
+			std::string const
+				content_type = _request->get_header_field("content-type");
+			if (content_type == "") {
+				_create_file(path, _request->get_raw());
+				return ;
+			}
+			if (content_type.find("multipart/form-data") != std::string::npos)
+				return (_multipart_upload(path));
+			_status = METHOD_NOT_ALLOWED;
+			/* I've chosen to only handle multipart */
+		}
+
+	void	_multipart_upload( std::string const &path ) {
+
+		std::string body = _request->get_raw();
+		size_t	line = body.find("\r\n");
+//		std::string const boundary = body.substr(0, line);
+		while (line != std::string::npos) {
+
+			size_t start = line + 2;
+			if (start >= body.size())
+				break ;
+
+			line = body.find("\r\n", start);
+			const std::string content_disposition = body.substr(start, line);
+			start = line + 2;
+
+			start = body.find("\r\n", start) + 4; // remove content_type
+
+			size_t const
+				filename_pos = content_disposition.find("filename=\"", 0) + 10;
+			std::string const
+				filename = content_disposition.substr(filename_pos,
+					content_disposition.find("\"", filename_pos) - filename_pos);
+
+			line = body.find("\r\n", start);
+			if (!_create_file(path + filename, body.substr(start, line)))
+				return ;
+			start = line + 2;
+			line = body.find("\r\n", start);
+		}
+		_status = NO_CONTENT;
+	}
+	bool
+		_create_file( std::string const &path, std::string const &content ) {
+
+		if (access(path.c_str(), F_OK) == 0) {
+			_status = CONFLICT;
+			return (false);
+		}
+
+		std::ofstream _out(path.c_str());
+		if (!_out) {
+			_status = INTERNAL_SERVER_ERROR;
+			return (false);
+		}
+  		_out << content;
+		if (_out.bad()) {
+			_status = INTERNAL_SERVER_ERROR;
+			return (false);
+		}
+		_out.close();
+		_status = NO_CONTENT;
+		usleep(10); //?
+		return (true);
+	}
+
+	/* --------- DELET ------- */
+
+	void	_delete( LocationBlock const *block ) {
+
+		const std::string path = _build_method_path(block, _DELETE, true);
+		if (path == "")
+			return;
+		errno = 0;
+
+		if (remove(path.c_str()) != -1) {
+			_status = NO_CONTENT;
+			return ;
+		}
+
+		if (errno == ENOENT || errno == ENOTDIR)
+			_status = NOT_FOUND;
+		else if (errno == EACCES || errno == EPERM || errno == 39)
+			_status = FORBIDDEN;
+		else
+			_status = INTERNAL_SERVER_ERROR;
+	}
+
+	/* ------------------------------ */
 
 	const std::string	_generate_status_page( int const status_code ) {
 		std::stringstream	ss;
