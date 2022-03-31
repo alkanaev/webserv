@@ -158,12 +158,15 @@ class Response
 			path = lblock->get_upload_pass();
 		else
 			path = lblock->get_root();
+		//std::cout << "requested uir = " <<_request->get_uri() << "\n";
 		return (path + _request->get_uri());
 	}
 
 	/* ----------------- GET Method --------------------- */
 	void	_get( LocationBlock const *lblock ) {
 		std::string const path = _build_method_path(lblock, _GET, false);
+		std::cout << "get path = " << path << "\n";
+
 		if (path == "")
 			return ;
 
@@ -313,6 +316,7 @@ class Response
 	*/
 	void	_post( LocationBlock const *lblock ) {
 		const std::string path = _build_method_path(lblock, _POST, true);
+		std::cout << "trying a Post Method\n";
 		if (path == "")
 			return ;
 		// cgi //
