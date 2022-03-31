@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/30 18:29:21 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/03/31 19:06:14 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,7 @@ void Configurations::general_init()
 	directives_loc.push_back("cgi_path");
 	directives_loc.push_back("client_max_body_size");
 	directives_loc.push_back("return");
+	directives_loc.push_back("upload_pass");
 }
 
 void Configurations::serv_init() 
@@ -474,10 +475,14 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		loc.cgi_extension = directive;
 	else if (name == "cgi_path")
 		loc.cgi_path = directive;
-	else if (name == "client_max_body_size") 
+	else if (name == "client_max_body_size")
+	{
+		std::cout << "\n\n\n\n-------------------------\n\n\n\n" << std::endl;
 		loc.client_max_body_size = ft_stoi_unsign(directive);
+	}
 	else if (name == "upload_pass")
 	{
+		std::cout << "\n\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n" << std::endl;
 		if (!check_string(directive))
 			err_message("Bad paportmeter, directive's name: root / location");
 		loc.upload_pass = directive;
@@ -636,6 +641,7 @@ static void print_LocationBlock(LocationBlock const *block) {
 	//	std::cout << "cgi_extension:\t\t" << block->cgi_extension << std::endl;
 	//	std::cout << "cgi_path:\t\t" << block->cgi_path << std::endl;
 	std::cout << "client_max_body_size:\t\t" << block->get_body_limit() << std::endl;
+	std::cout << "UPLOSD_PASS:\t\t" << block->get_upload_pass() << std::endl;
 	if (!(block->get_methods()).empty())
 		std::cout << "HERE ARE LOC METHODS :" << std::endl;
 	std::cout << "location's methods >\t\t[";

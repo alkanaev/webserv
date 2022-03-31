@@ -3,12 +3,26 @@
 <body>
 
 <h1>Hello, it's webserv page</h1>
+<form action="/test_web_page/download.php" method="post" enctype="multipart/form-data">
+  <label for="my_download">Entre le lien du fichier a telecharger: </label>
+  <input id="my_download" name="my_download" type="text" required>
+  <br />
+  <input type="submit" value="Generer">
+</form>
 <p>Very basic page:
     <ul>
         <li>Simple</li>
         <li>No css needed</li>
         <li>Enough for validation</li>
       </ul>
+    <a href="https://png.pngtree.com/png-vector/20210216/ourlarge/pngtree-glitch-numbers-42-vector-on-transparent-background-png-image_2918159.jpg" download="t.pdf">
+      <img src="https://png.pngtree.com/png-vector/20210216/ourlarge/pngtree-glitch-numbers-42-vector-on-transparent-background-png-image_2918159.jpg" width="200" height="200">
+    </a>
+    <!-- <form method="post" action="custom-filename.jpg">
+      <a target="custom-filename.jpg" href="https://png.pngtree.com/png-vector/20210216/ourlarge/pngtree-glitch-numbers-42-vector-on-transparent-background-png-image_2918159.jpg" title="ImageName">
+        <img alt="ImageName" src="https://png.pngtree.com/png-vector/20210216/ourlarge/pngtree-glitch-numbers-42-vector-on-transparent-background-png-image_2918159.jpg">
+      </a>
+    </form> -->
 </p>
 
 </body>
