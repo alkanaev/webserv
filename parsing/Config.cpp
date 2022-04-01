@@ -6,12 +6,11 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/31 19:06:14 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/01 13:54:57 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
-#include <sstream>
  
 std::vector<std::string> Configurations::split(const std::string &str, char sep)
 {
@@ -157,12 +156,19 @@ int Configurations::is_location_block()
 	return location_block;
 }
 
-int Configurations::check_string(std::string str) 
+int Configurations::check_string(std::string str, int k) 
 {
-	if ((str[0] == '/' || (str[0] == '.' && str[0] == '/')))
-		return 1;
+	if (!k)
+	{
+		if ((str[0] == '/' || (str[0] == '.' && str[1] == '/')))
+			return 1;
+	}
 	else
-		return 0;
+	{
+		if ((str[0] == '/' || (str[0] == '.' && str[1] == '/') || (str[0] == '*' && str[1] == '.')))
+			return 1;
+	}
+	return 0;
 }
 
 unsigned int Configurations::ft_stoi_unsign(std::string str) 
@@ -307,7 +313,7 @@ int Configurations::check_err_num_path(std::string str)
 	std::string::const_iterator it = num.begin();
 	while (it != num.end() && std::isdigit(*it))
 		++it;
-	if ((!num.empty() && it == num.end()) && found && check_string(path))
+	if ((!num.empty() && it == num.end()) && found && check_string(path, 0))
 		return 1;
 	return 0;
 }
@@ -388,7 +394,7 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	else if (name == "root")
 	{
 		serv.root = directive;
-		if (!check_string(directive))
+		if (!check_string(directive, 0))
 		{
 			std::cout << "directive: " << directive << "\n";
 			err_message("Bad parameter, directive's name: root / server");
@@ -434,8 +440,12 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	else if (name == "location")
 	{
 		loc.path = directive;
-		if (!check_string(directive))
+		
+		if (!check_string(directive, 1))
+		{
+			std::cout << "------------" << directive << "----------------" << std::endl;
 			err_message("Bad parameter, problem: location path");
+		}
 	}
 }
 
@@ -444,7 +454,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	if (name == "root")
 	{
 		loc.root = directive;
-		if (!check_string(directive))
+		if (!check_string(directive, 0))
 			err_message("Bad parameter, directive's name: root / location");
 	}
 	else if (name == "return") 
@@ -476,14 +486,10 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	else if (name == "cgi_path")
 		loc.cgi_path = directive;
 	else if (name == "client_max_body_size")
-	{
-		std::cout << "\n\n\n\n-------------------------\n\n\n\n" << std::endl;
 		loc.client_max_body_size = ft_stoi_unsign(directive);
-	}
 	else if (name == "upload_pass")
 	{
-		std::cout << "\n\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n" << std::endl;
-		if (!check_string(directive))
+		if (!check_string(directive, 0))
 			err_message("Bad paportmeter, directive's name: root / location");
 		loc.upload_pass = directive;
 	}
@@ -491,7 +497,6 @@ void Configurations::take_location_directives(std::string name, std::string dire
 
 void Configurations::config_part() {
 	int searching_checker = 0;
-	//	char sym = '{';
 	serv_init();
 	for(std::vector<std::string>::iterator itc = directives_config.begin(); itc != directives_config.end(); itc++) 
 	{
@@ -514,7 +519,6 @@ void Configurations::config_part() {
 void Configurations::take_server_part()
 {
 	loc_init(0);
-	//	char sym = ';';
 	if (p_config == "}")
 	{ 
 		server_block = 0;
@@ -546,7 +550,6 @@ void Configurations::take_server_part()
 
 void Configurations::take_location_part()
 {
-	//	char sym = ';';
 	if (p_config == "}") 
 	{
 		location_block = 0;

@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/03/31 19:06:57 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/01 13:30:18 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,7 @@
 #include <stdlib.h>
 #include <list> /* list of errors */
 #include <fstream>
-
-/*
-enum  Allowed //<=== remove that in the near futur
-{
-	GET = 0,
-	POST = 1,
-	DELETE = 2,
-};
-*/
+#include <sstream>
 
 class Configurations
 {
@@ -66,7 +58,7 @@ class Configurations
 		int    is_server_block();
 		int    is_location_block();
 		std::string	get_line();
-		int check_string(std::string str);
+		int check_string(std::string str, int k);
 		int check_err_num_path(std::string str);
 		void allow_methods(std::string const &directive, int k);
 		unsigned int	ft_stoi_unsign(std::string);
