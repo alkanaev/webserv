@@ -205,7 +205,8 @@ class Events
 		int ret = client->read_request();
 		if (ret == READ_EOF || ret == READ_ERROR) //not the best way to handel EOF
 			return _delete_client(ev_fd, client);
-		_ev_switchState(ev_fd, 1);
+		if (ret == READ_OK)
+			_ev_switchState(ev_fd, 1);
 	}
 
 	void	_handle_clientWrite(int ev_fd) {

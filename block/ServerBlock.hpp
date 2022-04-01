@@ -112,8 +112,9 @@ class ServerBlock: protected Serv_block
 
 	const LocationBlock	 *_get_lockBlock( std::string const &uri ) const {
 		std::string _uri = uri;
-		if (uri.find("/", 1) != std::string::npos)
-			_uri = _uri.substr(0, uri.find("/", 1));
+		size_t tmp = uri.find("/", 1);
+		if (tmp != std::string::npos)
+			_uri = _uri.substr(0, tmp);
 		LocationObject::const_iterator it = locations.find(_uri);
 		if (it != locations.end())
 			return (it->second);
