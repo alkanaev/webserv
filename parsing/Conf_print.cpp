@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/03 18:16:39 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 18:17:30 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/03 21:53:14 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,6 @@ static void print_LocationBlock(LocationBlock const *block) {
 	std::cout << "root:\t\t" << block->get_root() << std::endl;
 	std::cout << "redirect number:\t\t" << block->get_redirection_code() << std::endl;
 	std::cout << "redirect path:\t\t" << block->get_redirection() << std::endl;
-	//	std::cout << "auth_basic:\t\t" << block->auth_basic << std::endl;
-	//	std::cout << "auth_basic_user_file:\t\t" << itl->auth_basic_user_file << std::endl;
-	//	std::cout << "cgi_extension:\t\t" << block->cgi_extension << std::endl;
-	//	std::cout << "cgi_path:\t\t" << block->cgi_path << std::endl;
 	std::cout << "client_max_body_size:\t\t" << block->get_body_limit() << std::endl;
 	std::cout << "UPLOSD_PASS:\t\t" << block->get_upload_pass() << std::endl;
 	if (!(block->get_methods()).empty())
@@ -60,7 +56,6 @@ void Configurations::print_parsed()
 	for(std::vector<ServerBlock*>::const_iterator its = server.begin(); its != server.end(); its++) 
 	{
 		std::cout << "**SERVER BLOCK**" << std::endl;
-		//		std::cout << "__________________\n" << "loc configs num::\t\t" << its->location.size() << "\n__________________\n" << std::endl;
 		std::cout << "listen:\t\t" << (*its)->get_listen() << std::endl;
 		std::cout << "listen ip:\t\t" << (*its)->get_ip()<< std::endl;
 		std::cout << "listen port:\t\t" << (*its)->get_port()<< std::endl;

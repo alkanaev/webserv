@@ -77,8 +77,8 @@ struct Loc_block
 	typedef std::vector<std::string>			IndexObject;
 
     std::string	cgi_path;
-	std::string	cgi_extension;
-	// std::map<std::string, std::string> cgi_map;
+	std::vector<std::string>	cgi_extension;
+	std::map<std::string, std::vector<std::string> > cgi_map;
 	std::string					path;
 	std::string					upload_pass;
 	std::string					auth_basic_user_file;

@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 19:19:36 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/03 21:35:13 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,6 @@ class Configurations
 		void take_redirect(std::string directive, int k);
 		int check_redirect(std::string str);
 		std::string get_absolut();
-		void get_cgi_map();
 
 		friend std::ostream &operator<<(std::ostream &ostream_obj, const Configurations &obj);
 		friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);

@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 19:39:17 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/03 21:53:51 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,8 @@ std::string Configurations::get_directive(std::string str)
 	std::string directive;
 	size_t str_len = str.length();
 	size_t conf_len = p_config.length() - 1;
-	for(; str_len < conf_len; str_len++) {
+	for(; str_len < conf_len; str_len++) 
 		directive += p_config[str_len];
-	}
 	return directive;
 }
 
@@ -351,9 +350,14 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	else if (name == "auth_basic_user_file") 
 		loc.auth_basic_user_file = directive;
 	else if (name == "cgi_extension")
-		loc.cgi_extension = directive;
+		loc.cgi_extension.push_back(directive);
 	else if (name == "cgi_path")
-		loc.cgi_path = directive;
+	{
+		if (!loc.cgi_path.length())
+			loc.cgi_path = directive;
+		else
+			err_message("Bad parameter, cgi: only one cgi path per location is allowed");
+	}
 	else if (name == "client_max_body_size")
 		loc.client_max_body_size = ft_stoi_unsign(directive);
 	else if (name == "upload_pass")
@@ -361,6 +365,15 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		loc.upload_pass = serv.root + directive;
 		if (!check_string(directive, 0))
 			err_message("Bad paportmeter, directive's name: root / location");
+	}
+	if (loc.cgi_path.length() && !loc.cgi_extension.empty())
+	{
+		// std::cout << loc.cgi_path << std::endl;
+		// for (int i = 0; i < loc.cgi_extension.size(); i++) 
+		// {
+			//  std::cout << loc.cgi_extension.at(i) << " -*- ";
+		// }
+		loc.cgi_map[loc.cgi_path] = loc.cgi_extension;
 	}
 }
 
@@ -430,7 +443,7 @@ void Configurations::take_location_part()
 	{
 		for(std::vector<std::string>::iterator itl = directives_loc.begin(); itl != directives_loc.end(); itl++) 
 		{
-			if (p_config.find(*itl) == 0) 
+			if (!p_config.find(*itl)) 
 			{
 				if (check_end_line(';')) 
 					take_location_directives(*itl, get_directive(*itl));
