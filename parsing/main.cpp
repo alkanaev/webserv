@@ -11,11 +11,11 @@ int main(int ac, char **av)
 	else
 	{
 		std::cout << "\n**Plese, give a path to a config as 2nd argument**\n" << std::endl;
-		exit(1); // temporary decision cause "exit" isn't allowed
+		exit(1);
 	}
 	config.work(file);
-	if (error_found())
-		std::
+	// if (error_found())
+	// 	std::
 #ifdef DEBUG
 	print_parsed();
 #endif
