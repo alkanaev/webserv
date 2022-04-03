@@ -19,7 +19,6 @@
 
 # define CLIENT_BUFFER_SIZE 4092
 # define CLIENT_TIMEOUT 60
-# define RESPONSE "HTTP/1.1 200 OK\r\n\r\n <HTML>\n<HEAD>\n<TITLE>Your Title Here</TITLE>\n""</HEAD>\n<BODY BGCOLOR=\"FFFFFF\">\n<CENTER><IMG SRC=\"clouds.jpeg\" ALIGN=\"BOTTOM\"> </CENTER>\n<HR>\n<a href=\"http://somegreatsite.com\">Link Name</a>\nis a link to another nifty site\n<H1>This is a Header</H1>\n<H2>This is a Medium Header</H2>\nSend me mail at <a href=\"mailto:support@yourcompany.com\">\nsupport@yourcompany.com</a>.\n<P> This is a new paragraph!\n<P> <B>This is a new paragraph!</B>\n<BR> <B><I>This is a new sentence without a paragraph break, in bold italics.</I></B>\n<HR>\n</BODY>\n</HTML>\n"
 
 /* minimal Client class... */
 class Client
@@ -27,7 +26,6 @@ class Client
 	private:
 		/* private data */
 		ServerBlock			*_serv;
-
 		Request				*_request;
 		Response			*_response;
 		struct sockaddr_in	_addr;
@@ -54,6 +52,8 @@ class Client
 					std::cerr << "fcntl() failed\n";
 				}
 				gettimeofday(&_ping, NULL);
+				std::cout << " [🐱] New Client: " << CYAN <<
+					get_ip() << EOC;
 			}
 
 		/* destructor */
@@ -64,6 +64,7 @@ class Client
 				delete _request;
 			if (_response)
 				delete _response;
+			std::cout << " [👻] " << CYAN << get_ip() << EOC;
 		}
 
 		/* getter */
@@ -83,9 +84,10 @@ class Client
 			} else if (!n)
 				return (READ_EOF);
 			else {
+				buffer[n] = 0;
 				if (!_request) {
 					_request = new Request(buffer);
-					//change ping time
+					gettimeofday(&_ping, NULL); //maybe
 				} else 
 					_request->add_buffer(buffer);
 				return (_read_status());
@@ -108,6 +110,8 @@ class Client
 	private: 
 		/* private functions */
 		READ	_read_status() {
+			static std::string const asked[] = { " [🧡] GET", " [💙] POST", " [💔] DELET", " [👽] UNSUPORTED"};
+
 			if (!_request->header_ready()) {
 				if (!_request->have_read_enought())
 					return (READ_WAIT);
@@ -115,11 +119,13 @@ class Client
 					if (!_request->read_header())
 						return (READ_OK);
 			}
+			std::cout << " [🐱]: " << CYAN << get_ip() << EOCC
+				<< asked[_request->get_method()] << "\n";
 			if (_request->get_method() == _POST && !_request->read_body())
 				return (READ_WAIT);
-			//////// debug /////////
-			//_request->print();
-			//////////////////////
+#ifdef DEBUG
+			_request->print();
+#endif
 			return (READ_OK);
 		}
 
@@ -138,5 +144,4 @@ class Client
 			return (true);
 		}
 };
-
 #endif /* end of include guard CLIENT_HPP */

@@ -158,14 +158,12 @@ class Response
 			path = lblock->get_upload_pass();
 		else
 			path = lblock->get_root();
-		//std::cout << "requested uir = " <<_request->get_uri() << "\n";
 		return (path + _request->get_uri());
 	}
 
 	/* ----------------- GET Method --------------------- */
 	void	_get( LocationBlock const *lblock ) {
 		std::string const path = _build_method_path(lblock, _GET, false);
-		std::cout << "get path = " << path << "\n";
 
 		if (path == "")
 			return ;
@@ -261,6 +259,7 @@ class Response
 	}
 	bool	_get_autoindex( std::vector<struct dirent> const &files ) {
 		std::vector<struct dirent>::const_iterator it_file = files.begin();
+		/* maybe do something better (order etc) */
 		for (; it_file != files.end(); it_file++)
  		{
  			_body += "<html>\n<head><title>Autoindex</title></head>\n";
@@ -316,7 +315,6 @@ class Response
 	*/
 	void	_post( LocationBlock const *lblock ) {
 		const std::string path = _build_method_path(lblock, _POST, true);
-		std::cout << "trying a Post Method\n";
 		if (path == "")
 			return ;
 		// cgi //
@@ -335,39 +333,46 @@ class Response
 				_create_file(path, _request->get_raw());
 				return ;
 			}
-			if (content_type.find("multipart/form-data") != std::string::npos)
-				return (_multipart_upload(path));
+			if (_request->get_form() == _MULTIPART)
+				return (_multipart_upload(path,
+							content_type.substr(content_type.find("=") + 1)));
 			_status = METHOD_NOT_ALLOWED;
-			/* I've chosen to only handle multipart */
+			/* I've chose to only handle multipart */
 		}
 
-	void	_multipart_upload( std::string const &path ) {
+	void
+		_multipart_upload( std::string const &path, std::string const &boundary ) {
 
 		std::string body = _request->get_raw();
-		size_t	line = body.find("\r\n");
-//		std::string const boundary = body.substr(0, line);
+		size_t	line = body.find("\r\n"); // bondary line
+		size_t start = line + 2;
+		line = body.find("\r\n", start);
+
 		while (line != std::string::npos) {
 
-			size_t start = line + 2;
-			if (start >= body.size())
-				break ;
-
-			line = body.find("\r\n", start);
-			const std::string content_disposition = body.substr(start, line);
+			std::string const content_disposition = body.substr(start, line);
 			start = line + 2;
-
 			start = body.find("\r\n", start) + 4; // remove content_type
 
+			/* get filename */
 			size_t const
 				filename_pos = content_disposition.find("filename=\"", 0) + 10;
 			std::string const
 				filename = content_disposition.substr(filename_pos,
 					content_disposition.find("\"", filename_pos) - filename_pos);
 
-			line = body.find("\r\n", start);
-			if (!_create_file(path + filename, body.substr(start, line)))
+			line = body.find(boundary, start);
+			/* last file */
+			if (body[line + boundary.size() - 1] == '-') {
+				_create_file(path + filename, body.substr(start,
+							line - start - 4));
 				return ;
-			start = line + 2;
+			}
+			/* one more file */
+			if (!_create_file(path + filename, body.substr(start,
+							line - start - 2)))
+				return ;
+			start = line + boundary.size() + 4;
 			line = body.find("\r\n", start);
 		}
 		_status = NO_CONTENT;
@@ -375,6 +380,7 @@ class Response
 	bool
 		_create_file( std::string const &path, std::string const &content ) {
 
+		/* not sure about this one. File should not already exist */
 		if (access(path.c_str(), F_OK) == 0) {
 			_status = CONFLICT;
 			return (false);
@@ -397,7 +403,6 @@ class Response
 	}
 
 	/* --------- DELET ------- */
-
 	void	_delete( LocationBlock const *block ) {
 
 		const std::string path = _build_method_path(block, _DELETE, true);
@@ -417,7 +422,6 @@ class Response
 		else
 			_status = INTERNAL_SERVER_ERROR;
 	}
-
 	/* ------------------------------ */
 
 	const std::string	_generate_status_page( int const status_code ) {
@@ -448,8 +452,5 @@ class Response
 			return (__statusCode[0]);
 		return (it->second);
 	}
-
 };
-
-// ------------------------------------------------------------------
 #endif /* end of include guard RESPONSE_HPP */

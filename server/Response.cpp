@@ -8,8 +8,6 @@
 
 Response::StatusMap Response::_initStatusMap() {
 
-	//debug 
-	std::cout << "init_Status\n";
 	Response::StatusMap statusCode;
 
 	statusCode[CONTINUE] = "Continue";
@@ -77,9 +75,6 @@ Response::StatusMap Response::_initStatusMap() {
 }
 
 Response::TypeMap Response::_initTypeMap( void ) {
-
-	//debug//
-	std::cout << "init typesMAP\n";
 
 	Response::TypeMap	mime_types;
 	mime_types["aac"] = "audio/aac";
@@ -164,7 +159,6 @@ Response::TypeMap Response::_initTypeMap( void ) {
 
 	return (mime_types);
 }
-
 
 Response::StatusMap Response::__statusCode = _initStatusMap();
 

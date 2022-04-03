@@ -11,6 +11,7 @@
 # include <unordered_map>
 # include <iostream> /*debug*/
 # include <string>
+# include <sys/time.h>
 
 # define HEADER_READY 1
 # define BODY_READY 2
@@ -61,7 +62,6 @@ class Request
 		std::string	_raw; /* request data to parse */
 		std::string	_host;
 		std::string	_uri; /* Uniform Resource Identifier */
-//		std::string	_version; /* always http 1.1 should I keep it ? (no) */
 		std::string	_query;
 		size_t		_separator_pos; /* only use for init.... move it there */
 		size_t		_body_size; /*not sur I need it */
@@ -88,6 +88,7 @@ class Request
 		/* destructor */
 		~Request () {}
 
+#ifdef DEBUG
 		/* ---------- for debug only ------------- */
 		void	print() const {
 			std::cout << "-------------------------------------------\n\n";
@@ -108,6 +109,7 @@ class Request
 			std::cout <<  "hidden status: " << (int)_status << "\n";
 			std::cout << "-------------------------------------------\n\n";
 		}
+#endif
 
 		/* getter */
 		METHODS	get_method() const { return _method; }
@@ -120,7 +122,9 @@ class Request
 		}
 		STATUS_CODE	get_code() const { return _code; }
 		bool	header_ready() const { return ((_status & HEADER_READY)); }
+//		bool	body_ready() const { return ((_status & BODY_READY)); }
 		bool	have_read_enought() const { return (_raw.find("\r\n\r\n") != std::string::npos); }
+		FORM	get_form() const { return _form; };
 
 		/* methods */
 		void	add_buffer( std::string const &buffer ) {
@@ -140,22 +144,24 @@ class Request
 				return (false);
 			if (_method == _POST && _validate_post() == false)
 				return (false);
+			_raw.erase(0, 2); //sould erase all the header
 			_status |= HEADER_READY;
 			return (true);
 		}
 
 	bool	read_body() {
 		if (_status & CHUNKED) {
+			//std::cout << "READ CHUNKED\n";
 			if (_read_chunks() == READ_WAIT)
 				return (false);
 			_body_size = _raw.size();
 			_status &= ~CHUNKED;
-			_status |= BODY_READY; // ?
+//			_status |= BODY_READY; // ? not used
 			return (true);
 		}
-		if (_raw.size() < _body_size) // error
+		if (_raw.size() < _body_size) // not enought
 			return (false);
-		_status |= BODY_READY;
+//		_status |= BODY_READY; //not used
 		return (true);
 	}
 
@@ -221,9 +227,6 @@ class Request
 			return _invalid(BAD_REQUEST);
 
 		_method = _get_method(_raw.substr(0, _separator_pos));
-
-		/* uptade _raw */
-		//		_raw.erase(0, _separator_pos + 1); //could be done faster with handwriten buffer
 		++_separator_pos;
 
 		if (_method == METHOD_UNKNOWN) // could not get the method right
@@ -243,14 +246,11 @@ class Request
 
 		if (_uri == "" || _uri[0] != '/') // (trully) not certain about the last condition... 
 			return (_invalid(BAD_REQUEST));
-		/* uptdate _raw */
-		//		_raw_request.erase(0, separator_pos + 1);
 		_separator_pos = tmp + 1;
 
 		/* get the _query if there is one */
-		if (_uri.find("?", _separator_pos) != std::string::npos) { //so far I undestand that query start after a '?' 
+		if (_uri.find("?", _separator_pos) != std::string::npos) {
 			_query = _uri.substr(_uri.find("?") + 1);
-			//_uri.erase(_uri.find("?")); //not sure what to do
 		}
 		return (true);
 	}
@@ -276,16 +276,6 @@ class Request
 			return (_invalid(BAD_REQUEST));
 		if (_version[5] != '1' || _version[6] != '.' || _version[7] != '1')
 			return _invalid(HTTP_VERSION_NOT_SUPPORTED);
-
-		/* les restrictiv way... aborded for the moment  --------------.
-		   if (_version == "" || _version.find("http", tmp) != 0
-		   || _version[4] != '/')
-		   return (_invalid(BAD_REQUEST));
-		   _http_version = _http_version.substr(_version + 5);
-		   if (_http_version != "1.1")
-		   return _invalid(HTTP_VERSION_NOT_SUPPORTED);
-		   ----------------------*/
-		//		_raw_request.erase(0, version_separator_pos + 2);
 		_separator_pos = tmp + 2;
 		return (true);
 	}
@@ -301,11 +291,13 @@ class Request
 		return (s);
 	}
 
+	/*
 	static std::string* _trim(std::string *s, const char *t = " \t") {
 		s->erase(s->find_last_not_of(t) + 1);
 		s->erase(0, s->find_first_not_of(t));
 		return (s);
 	}
+	*/
 
 	/* Connection: keep-alive */
 	/* ... */
@@ -324,7 +316,7 @@ class Request
 			std::string	header_value = header_str.substr(name_separator_pos + 1);
 			_strtolower(&header_name);
 			//if (header_name != "cookie")
-			_strtolower(&header_value); //maybe not
+			//_strtolower(&header_value); //maybe not
 	//		_trim(&header_value);
 			_headers[header_name] = header_value;
 			if (header_name == "host")
@@ -335,14 +327,7 @@ class Request
 				return (_invalid(REQUEST_HEADER_FIELDS_TOO_LARGE));
 			 tmp =  _raw.find("\r\n", _separator_pos);
 		}
-		_raw.erase(0, _separator_pos + 2); //sould erase all the header
-		/////////////////DEBUG///////////////////////////////
-		/*
-		std::cout << "================================\n";
-		std::cout << "verif _raw header empty: " << _raw << "\n";
-		std::cout << "================================\n";
-		*/
-		///////////////////////////////////////////////
+		_raw.erase(0, _separator_pos);
 		return (true);
 	}
 
@@ -391,10 +376,10 @@ class Request
 		it = _headers.find("content-type");
 		if (it == _headers.end() || it->second == "")
 			return (_invalid(BAD_REQUEST));
-		if (it->second == "application/x-www-form-urlencoded")
-			_form = _URLENCODED;
-		else if (it->second == "multipart/form-data")
+		if (it->second.find("multipart/form-data") != std::string::npos)
 			_form = _MULTIPART;
+		else  if (it->second.find("application/x-www-form-urlencoded") != std::string::npos)
+			_form = _URLENCODED;
 		return (true);
 	}
 

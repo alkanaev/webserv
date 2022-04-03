@@ -5,18 +5,17 @@
  */
 
 #ifndef EVENTS_HPP
-
-#define EVENTS_HPP
+# define EVENTS_HPP
 
 # include "Server.hpp"
 # include "Client.hpp"
 
 # include <unordered_map>
-# include <stdexcept>
+# include <stdexcept> /* throw */
 
 # include <sys/types.h>
-# include <sys/event.h>
-# include <sys/time.h>
+# include <sys/event.h> /* kevent */
+# include <sys/time.h> /* timespec */
 
 # define MAX_CONNECT 4092
 # define MAX_TIME 600
@@ -49,6 +48,7 @@ class Events
 			delete it->second;
 		if (event_fd != -1)
 			close(event_fd);
+		std::cout << "--------------------------\n";
 	}
 
 	void	init( std::vector<ServerBlock*> hosts ) {
@@ -64,7 +64,7 @@ class Events
 		struct kevent	events[MAX_CONNECT];
 		int				total_event;
 
-		std::cout << "[⚙️] server's running...\n";
+		std::cout << " [💃] server's running...\n\n ---------- LOGS ----------\n";
 		while (_on) {
 			int nfds = kevent(event_fd, 0, 0, events, MAX_CONNECT, _timeout);
 			total_event += nfds;
@@ -106,11 +106,11 @@ class Events
 	bool	_add_hosts( std::vector<ServerBlock*> hosts ) {
 		for (std::vector<ServerBlock*>::const_iterator cit = hosts.begin();
 				cit != hosts.end(); ++cit) {
-				if (!_addHost(*cit)) {
+			if (!_addHost(*cit)) {
 				std::cerr << "unable to add " << (*cit)->get_name() << ":" <<
-				(*cit)->get_port() << "\n";
+					(*cit)->get_port() << "\n";
 				return (false);
-				}
+			}
 		}
 		return (true);
 	}
@@ -148,20 +148,21 @@ class Events
 		return (_ev_addRead(STDIN_FILENO));
 	}
 
-
 	//-------------------
 	// ------------------------------ Event Handel Functions ---------------|
 
 	void	_handle_stdin() {
 		static std::string line;
 
-			if (!std::getline(std::cin, line)) {
-				_on = false; return ;
-			}
-			if (line == "quit" || line == "exit") {
-				_on = false;
-				std::cout << "[🔑] shutting down...\n";
-			}
+		if (!std::getline(std::cin, line)) {
+			_on = false; return ;
+		}
+		if (line == "quit" || line == "exit") {
+			_on = false;
+			std::cout << " [🔑] shutting down...\n";
+		} else {
+			std::cout << "Accepted in: exit | quit\n";
+		}
 	}
 
 	void	_handle_error( int const ev_fd ) {
@@ -217,13 +218,12 @@ class Events
 		}
 
 		if (client->send_response())
-			return (_delete_client(ev_fd, client));
+			return (_delete_client(ev_fd, client)); //maybe to much
 		_ev_switchState(ev_fd, 0);
-		
 	}
 
 	void	_delete_client(int ev_fd, Client *client) {
-//		close(ev_fd); // not sure
+		//		close(ev_fd); // not sure
 		/* not sure it is necessary */
 		struct kevent kev[2];
 		EV_SET(kev, ev_fd, EVFILT_READ, EV_DELETE | EV_DISABLE, 0, 0, 0);
@@ -233,7 +233,7 @@ class Events
 		delete client;
 		_clients.erase(ev_fd);
 	}
-	
+
 	void	_clean() {
 		struct timeval now;
 		gettimeofday(&now, NULL);
@@ -278,6 +278,4 @@ class Events
 		kevent(event_fd, kev, 2, 0, 0, 0);
 	}
 };
-
 #endif /* end of include guard EVENTS_HPP */
-

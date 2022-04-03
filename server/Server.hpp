@@ -71,7 +71,7 @@ class Server: public ServerBlock
 	void	_listen_socket() {
 		if (listen(_fd, MAX_CONNS) == -1)
 			throw std::runtime_error("listen() failed");
-		std::cout << "[📡]" << get_name()<< " bound on "
+		std::cout << " [📡] " << get_name()<< " bound on "
 			<< GREEN << ip << EOCC << ":" << RED << get_port() << EOC;
 	}
 };
