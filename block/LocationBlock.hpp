@@ -76,8 +76,9 @@ struct Loc_block
 	typedef std::map<std::string, std::string>	CgiObject;
 	typedef std::vector<std::string>			IndexObject;
 
-    std::string	cgi_path; // transform to std::map<std::string, std::string> (?)
-	std::string	cgi_extension; // need to know that we need exactly these chi directives
+    std::string	cgi_path;
+	std::string	cgi_extension;
+	// std::map<std::string, std::string> cgi_map;
 	std::string					path;
 	std::string					upload_pass;
 	std::string					auth_basic_user_file;

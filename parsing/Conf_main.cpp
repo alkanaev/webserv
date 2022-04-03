@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 19:03:24 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/03 19:39:17 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -358,9 +358,9 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		loc.client_max_body_size = ft_stoi_unsign(directive);
 	else if (name == "upload_pass")
 	{
+		loc.upload_pass = serv.root + directive;
 		if (!check_string(directive, 0))
 			err_message("Bad paportmeter, directive's name: root / location");
-		loc.upload_pass = directive;
 	}
 }
 
