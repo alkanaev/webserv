@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/04 16:03:53 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 16:09:26 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,6 +322,7 @@ std::string Configurations::get_cgi_ext(std::string const &s)
 	std::string::size_type pos = s.find('/');
 	if (pos != std::string::npos)
 		return s.substr(0, pos);
+	return NULL;
 }
 
 void Configurations::take_location_directives(std::string name, std::string directive) 

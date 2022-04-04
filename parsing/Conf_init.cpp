@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   conf_init.cpp                                      :+:      :+:    :+:   */
+/*   Conf_init.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/03 18:08:40 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 21:23:29 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 16:10:15 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,8 +77,8 @@ void Configurations::loc_init(int k)
 	loc.auth_basic = false;
 	loc.auth_basic_user_file.clear();
 //----------- cgi --------------
-	loc.cgi_extension.clear();
-	loc.cgi_path.clear();
+	// loc.cgi_extension.clear();
+	// loc.cgi_path.clear();
 // -------------
 	loc.client_max_body_size = serv.client_max_body_size;
 }
