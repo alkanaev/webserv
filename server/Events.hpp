@@ -118,6 +118,7 @@ class Events
 	bool	_addHost( ServerBlock const *host ) {
 		Server *new_host;
 
+		std::cout << "add host\n";
 		try {
 			new_host = new Server(*host);
 			if (!new_host) {
@@ -192,6 +193,7 @@ class Events
 			std::cerr << "handle_connection(): faild to add client to event list\n";
 			return ;
 		}
+		std::cout << "--------add: "<< new_fd << "\n";
 		_clients[new_fd] = client;
 	}
 

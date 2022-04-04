@@ -76,7 +76,7 @@ struct Loc_block
 	typedef std::map<std::string, std::string>	CgiObject;
 	typedef std::vector<std::string>			IndexObject;
 
-	std::map<std::string, std::string> cgi_map;
+	CgiObject					cgi_map;
 	std::string					path;
 	std::string					upload_pass;
 	std::string					auth_basic_user_file;
@@ -89,10 +89,10 @@ struct Loc_block
 	bool    					autoindex;
 	bool						auth_basic;
 
-	/* whithoud cgi atm */
 	Loc_block(){}
 
 	explicit Loc_block ( Serv_block const &serv ):
+			cgi_map(),
 			path(),
 			upload_pass(),
 			auth_basic_user_file(),
@@ -106,6 +106,7 @@ struct Loc_block
 			auth_basic(){}
 
 	Loc_block ( Loc_block const &other ):
+		cgi_map(other.cgi_map),
 		path(other.path),
 		upload_pass(other.upload_pass),
 		auth_basic_user_file(other.auth_basic_user_file),
@@ -155,6 +156,19 @@ class LocationBlock: private Loc_block
 
 		// debug //
 		std::vector<bool> const &get_methods() const { return (methods); }
+		
+		/* cgi method */
+		std::string const get_cgi( std::string const &uri ) const {
+		size_t const dot = uri.find(".");
+		if (dot == std::string::npos)
+			return ("");
+		const std::string ext = uri.substr(uri.find("."));
+
+		CgiObject::const_iterator it = cgi_map.find(ext);
+		if (it != cgi_map.end())
+			return (it->second);
+		return ("");
+	}
 
 	private:
 		/* private methods */

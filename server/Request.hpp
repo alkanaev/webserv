@@ -112,7 +112,7 @@ class Request
 #endif
 
 		/* getter */
-		METHODS	get_method() const { return _method; }
+		Headers const &get_headers() const { return _headers; }
 		std::string const &get_raw() const { return _raw; }
 		std::string const &get_uri() const { return _uri; }
 		std::string const &get_query() const { return _query; }
@@ -124,6 +124,7 @@ class Request
 		bool	header_ready() const { return ((_status & HEADER_READY)); }
 //		bool	body_ready() const { return ((_status & BODY_READY)); }
 		bool	have_read_enought() const { return (_raw.find("\r\n\r\n") != std::string::npos); }
+		METHODS	get_method() const { return _method; }
 		FORM	get_form() const { return _form; };
 
 		/* methods */

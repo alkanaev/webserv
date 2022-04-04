@@ -17,11 +17,8 @@
 # include "ServerBlock.hpp"
 
 
-# include <sstream> /*stringstream*/
 # include <dirent.h> /* opendir */
-# include <fcntl.h> /* open */
 # include <sys/stat.h> /* stat function */
-# include <fstream> /* offstream */
 
 class Response
 {
@@ -322,7 +319,7 @@ class Response
 
 		/* try cgi */
 		if (_cgi_pass(lblock))
-			return (true);
+			return ;
 
 		_handle_upload(lblock, path);
 	}
@@ -389,7 +386,7 @@ class Response
 		/* not sure about this one. File should not already exist */
 		if (access(path.c_str(), F_OK) == 0) {
 			_status = CONFLICT;
-			return;
+			return (false);
 		}
 
 		std::cout << " [🤰] Creating: " << path << "\n";
@@ -417,11 +414,11 @@ class Response
 			return (false);
 
 		/* init cgi */
-		Cgi cgi(cgi_path, block->get_root() + _req->get_uri(),
+		Cgi cgi(cgi_path, lblock->get_root() + _request->get_uri(),
 				_request->get_query(), _request->get_method());
 
 		/* setup  cgi */
-		if (!cgi.setup(_request->get_raw_request(), _request->get_headers())) {
+		if (!cgi.setup(_request->get_raw(), _request->get_headers())) {
 			_status = INTERNAL_SERVER_ERROR;
 			return (true);
 		}
@@ -440,8 +437,7 @@ class Response
 
 		/* add the cgi header to the response */
 
-		for (Cgi:HeadersObject::const_iterator it = cgi.get_headers().begin();
-			it != cgi.get_headers().end(); ++it)
+		for (Cgi::HeadersObject::const_iterator it = cgi.Hbegin(); it != cgi.Hend(); ++it)
 			_headers[it->first] = it->second;
 		return (true);
 	}

@@ -116,8 +116,11 @@ class ServerBlock: protected Serv_block
 		if (tmp != std::string::npos)
 			_uri = _uri.substr(0, tmp);
 		LocationObject::const_iterator it = locations.find(_uri);
-		if (it != locations.end())
+		if (it != locations.end()) {
+			std::cout << " [🚪] in: " << _uri << "\n";
 			return (it->second);
+		}
+		std::cout << " [🏞️] staying at root\n";
 		return (_defLoc); //change it for default_lockation :)
 	}
 
