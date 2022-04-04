@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/04 12:32:48 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 16:01:46 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,7 @@ int Configurations::get_err_num(std::string const &s)
 		return ft_stoi_unsign(s);
 }
 
-std::string Configurations::get_err_path(std::string const &s)
+std::string Configurations::get_the_path(std::string const &s)
 {
 	std::string res;
 	res = s.substr(s.find("/"));
@@ -203,7 +203,7 @@ std::map<int,std::string> Configurations::take_error_pages(std::string directive
 		err_message("Bad parameter, directive's name: error_page");
 	}
 	else
-		serv.error_page[get_err_num(directive)] = get_err_path(directive);
+		serv.error_page[get_err_num(directive)] = get_the_path(directive);
 	return serv.error_page;
 }
 
@@ -317,6 +317,13 @@ void Configurations::take_server_directives(std::string name , std::string direc
 	}
 }
 
+std::string Configurations::get_cgi_ext(std::string const &s)
+{
+	std::string::size_type pos = s.find('/');
+	if (pos != std::string::npos)
+		return s.substr(0, pos);
+}
+
 void Configurations::take_location_directives(std::string name, std::string directive) 
 {
 	if (name == "root")
@@ -350,15 +357,15 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	}
 	else if (name == "auth_basic_user_file") 
 		loc.auth_basic_user_file = directive;
-	else if (name == "cgi_extension")
-		loc.cgi_extension.push_back(directive);
-	else if (name == "cgi_path")
-	{
-		if (!loc.cgi_path.length())
-			loc.cgi_path = directive;
-		else
-			err_message("Bad parameter, cgi: only one cgi path per location is allowed");
-	}
+	// else if (name == "cgi_extension")
+	// 	loc.cgi_extension.push_back(directive);
+	// else if (name == "cgi_path")
+	// {
+	// 	if (!loc.cgi_path.length())
+	// 		loc.cgi_path = directive;
+	// 	else
+	// 		err_message("Bad parameter, cgi: only one cgi path per location is allowed");
+	// }
 	else if (name == "client_max_body_size")
 		loc.client_max_body_size = ft_stoi_unsign(directive);
 	else if (name == "upload_pass")
@@ -367,14 +374,17 @@ void Configurations::take_location_directives(std::string name, std::string dire
 		if (!check_string(directive, 0))
 			err_message("Bad paportmeter, directive's name: root / location");
 	}
-	if (loc.cgi_path.length() && !loc.cgi_extension.empty())
+	if (name == "cgi")
 	{
 		// std::cout << loc.cgi_path << std::endl;
 		// for (int i = 0; i < loc.cgi_extension.size(); i++) 
 		// {
 			//  std::cout << loc.cgi_extension.at(i) << " -*- ";
 		// }
-		loc.cgi_map[loc.cgi_path] = loc.cgi_extension;
+		std::string cgi_ext = get_cgi_ext(directive);
+		std::string cgi_path = get_the_path(directive);
+		if (cgi_ext.length() && cgi_path.length())
+			loc.cgi_map[cgi_path] = cgi_ext;
 	}
 }
 

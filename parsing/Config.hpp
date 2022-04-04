@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 21:35:13 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 16:02:20 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ class Configurations
 		void    print_parsed();
 		std::map<int,std::string> take_error_pages(std::string directive);
 		int get_err_num(std::string const &s);
-		std::string get_err_path(std::string const &s);
+		std::string get_the_path(std::string const &s);
 		void take_index_vector(std::string directive, int k);
 		void kick_bad_methods(std::vector<std::string> tokens);
 		void err_message(std::string str);
@@ -85,6 +85,7 @@ class Configurations
 		void take_redirect(std::string directive, int k);
 		int check_redirect(std::string str);
 		std::string get_absolut();
+		std::string get_cgi_ext(std::string const &s);
 
 		friend std::ostream &operator<<(std::ostream &ostream_obj, const Configurations &obj);
 		friend std::ostream &operator<<(std::ostream &ostream_obj, const Serv_block &obj);
