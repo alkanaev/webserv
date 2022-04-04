@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/03 21:53:51 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 12:32:48 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,6 +322,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	if (name == "root")
 	{
 		loc.root = serv.root + directive;
+		std::cout << loc.root << std::endl;
 		if (!check_string(directive, 0))
 			err_message("Bad parameter, directive's name: root / location");
 	}
