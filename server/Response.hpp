@@ -318,6 +318,7 @@ class Response
 			return ;
 
 		/* try cgi */
+		std::cout << "try cgi "<< path << "\n";
 		if (_cgi_pass(lblock))
 			return ;
 
@@ -410,6 +411,7 @@ class Response
 
 	bool	_cgi_pass( LocationBlock const *lblock ) {
 		std::string cgi_path = lblock->get_cgi(_request->get_uri());
+		std::cout << "cgi_path "<< cgi_path << "\n";
 		if (cgi_path == "")
 			return (false);
 

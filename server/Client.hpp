@@ -70,7 +70,7 @@ class Client
 		/* getter */
 		int		get_fd() const { return _fd; }
 		bool	is_expired(time_t now) const {
-			return ((now - _ping.tv_sec) > CLIENT_TIMEOUT);
+			return ((now - _ping.tv_sec) > CLIENT_TIMEOUT); //one minutes.... test it pls
 		}
 
 		/* tmp */

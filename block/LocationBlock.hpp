@@ -159,10 +159,12 @@ class LocationBlock: private Loc_block
 		
 		/* cgi method */
 		std::string const get_cgi( std::string const &uri ) const {
+		std::cout << "uri: " << uri << "\n";
 		size_t const dot = uri.find(".");
 		if (dot == std::string::npos)
 			return ("");
 		const std::string ext = uri.substr(uri.find("."));
+		std::cout <<"ext: "<< ext << "\n";
 
 		CgiObject::const_iterator it = cgi_map.find(ext);
 		if (it != cgi_map.end())
