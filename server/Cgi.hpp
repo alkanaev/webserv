@@ -1,7 +1,7 @@
 /******************************************************************************
 *             _/((		@author		: abaudot (aimebaudot@gmail.com)		  *
-*    _.---. .'   `\		@created	: Sunday Apr 03, 2022 14:44:01 CEST,					  *
-*  .'      `     ^ T=	@filename	: Cgi		 \)\_					  *
+*    _.---. .'   `\		@created	: Sunday Apr 03, 2022 14:44:01 CEST,	  *
+*  .'      `     ^ T=	@filename	: Cgi            \)\_					  *
 * /     \       .--'						        /    '. .---._            *
 *|      /       )'-.			                  =P ^     `      '.          *
 *; ,   __..-(   '-.)				               `--.       /     \         *
@@ -15,10 +15,13 @@
 
 # include "Request.hpp"
 
+# define _CGI_TIMEOUT		1
+# define _CGI_TICKS_US		100
+
 class Cgi
 {
 	public: /* type */
-		typedef std::multimap<std::string, std::string> HeadersObject;
+		typedef std::map<std::string, std::string> HeadersObject; /* multimap ? */
 		typedef std::pair<std::string, std::string>		HeaderPair;
 		typedef std::map<std::string, std::string> 		EnvVarObject;
 	private: /* data */
@@ -72,6 +75,7 @@ class Cgi
 
 		bool	run() {
 
+			std::cout << " [🏗️] Running cgi Script: " << _file_path << "\n";
 			pid_t	bin_pid = fork();
 			if (worker < 0) {
 				std::cerr << "fork() failed\n";
@@ -146,13 +150,13 @@ class Cgi
 					return (false);
 				}
 
-				usleep(WEBSERV_CGI_TICKS_US); //---
+				usleep(_CGI_TICKS_US); //
 				if (pid && WIFEXITED(state))
 					break ;
 
 				gettimeofday(&current_time, NULL);
 				if (current_time.tv_sec >
-						start_time.tv_sec + WEBSERV_CGI_TIMEOUT) {
+						start_time.tv_sec + _CGI_TIMEOUT) {
 					//					if (current_time.tv_usec < start_time.tv_usec)
 					//						continue ; // ???????
 					std::cerr << "time out\n";

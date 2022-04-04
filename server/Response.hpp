@@ -12,13 +12,14 @@
 
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
-# include "Request.hpp"
+
+# include "Cgi.hpp"
 # include "ServerBlock.hpp"
 
 
 # include <sstream> /*stringstream*/
 # include <dirent.h> /* opendir */
-#include <fcntl.h> /* open */
+# include <fcntl.h> /* open */
 # include <sys/stat.h> /* stat function */
 # include <fstream> /* offstream */
 
@@ -175,10 +176,10 @@ class Response
 
 	bool	_get_file( LocationBlock const *lblock,
 			std::string const &path ) {
-		/*
-		 * if cig != ""
-		 * need to handel cgi case => return 
-		 */
+		/* try cgi */
+		if (_cgi_pass(lblock))
+			return (true);
+
 		if (path[path.size() - 1] == '/') /* is a dir */
 			return (_get_dir(lblock, path)); //////// return val
 
@@ -315,9 +316,14 @@ class Response
 	*/
 	void	_post( LocationBlock const *lblock ) {
 		const std::string path = _build_method_path(lblock, _POST, true);
+
 		if (path == "")
 			return ;
-		// cgi //
+
+		/* try cgi */
+		if (_cgi_pass(lblock))
+			return (true);
+
 		_handle_upload(lblock, path);
 	}
 	void
@@ -383,9 +389,10 @@ class Response
 		/* not sure about this one. File should not already exist */
 		if (access(path.c_str(), F_OK) == 0) {
 			_status = CONFLICT;
-			return (false);
+			return;
 		}
 
+		std::cout << " [🤰] Creating: " << path << "\n";
 		std::ofstream _out(path.c_str());
 		if (!_out) {
 			_status = INTERNAL_SERVER_ERROR;
@@ -402,6 +409,43 @@ class Response
 		return (true);
 	}
 
+	/* --------- CGI ----------*/
+
+	bool	_cgi_pass( LocationBlock const *lblock ) {
+		std::string cgi_path = lblock->get_cgi(_request->get_uri());
+		if (cgi_path == "")
+			return (false);
+
+		/* init cgi */
+		Cgi cgi(cgi_path, block->get_root() + _req->get_uri(),
+				_request->get_query(), _request->get_method());
+
+		/* setup  cgi */
+		if (!cgi.setup(_request->get_raw_request(), _request->get_headers())) {
+			_status = INTERNAL_SERVER_ERROR;
+			return (true);
+		}
+
+		/* run cgi script */
+		if (!cgi.run()) {
+			if (cgi.timed_out())
+				_status = GATEWAY_TIMEOUT;
+			else
+				_status = INTERNAL_SERVER_ERROR;
+			return (true);
+		}
+
+		/* retrive cgi output */
+		_body = cgi.get_output();
+
+		/* add the cgi header to the response */
+
+		for (Cgi:HeadersObject::const_iterator it = cgi.get_headers().begin();
+			it != cgi.get_headers().end(); ++it)
+			_headers[it->first] = it->second;
+		return (true);
+	}
+
 	/* --------- DELET ------- */
 	void	_delete( LocationBlock const *block ) {
 
@@ -410,6 +454,7 @@ class Response
 			return;
 		errno = 0;
 
+		std::cout << " [👾] Deleting: " << path << "\n";
 		if (remove(path.c_str()) != -1) {
 			_status = NO_CONTENT;
 			return ;
