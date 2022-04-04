@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/04 16:01:46 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 16:03:53 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -357,15 +357,6 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	}
 	else if (name == "auth_basic_user_file") 
 		loc.auth_basic_user_file = directive;
-	// else if (name == "cgi_extension")
-	// 	loc.cgi_extension.push_back(directive);
-	// else if (name == "cgi_path")
-	// {
-	// 	if (!loc.cgi_path.length())
-	// 		loc.cgi_path = directive;
-	// 	else
-	// 		err_message("Bad parameter, cgi: only one cgi path per location is allowed");
-	// }
 	else if (name == "client_max_body_size")
 		loc.client_max_body_size = ft_stoi_unsign(directive);
 	else if (name == "upload_pass")
@@ -376,11 +367,6 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	}
 	if (name == "cgi")
 	{
-		// std::cout << loc.cgi_path << std::endl;
-		// for (int i = 0; i < loc.cgi_extension.size(); i++) 
-		// {
-			//  std::cout << loc.cgi_extension.at(i) << " -*- ";
-		// }
 		std::string cgi_ext = get_cgi_ext(directive);
 		std::string cgi_path = get_the_path(directive);
 		if (cgi_ext.length() && cgi_path.length())
