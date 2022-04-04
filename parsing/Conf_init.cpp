@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Conf_init.cpp                                      :+:      :+:    :+:   */
+/*   conf_init.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/03 18:08:40 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/04 16:10:15 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 21:26:44 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,7 @@ void Configurations::general_init()
 	directives_loc.push_back("auth_basic");
 	directives_loc.push_back("auth_basic_user_file");
 	directives_loc.push_back("root");
-	directives_loc.push_back("cgi_extension");
-	directives_loc.push_back("cgi_path");
+	directives_loc.push_back("cgi");
 	directives_loc.push_back("client_max_body_size");
 	directives_loc.push_back("return");
 	directives_loc.push_back("upload_pass");
@@ -56,7 +55,6 @@ void Configurations::serv_init()
 	serv.autoindex = false;
 	serv.port = -1;
 	serv.server_name.clear();
-	//serv.location = std::vector<Loc_block>();
 	serv.client_max_body_size = 100000000;
 }
 

@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/04 16:09:26 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/04 21:32:25 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -247,8 +247,8 @@ void Configurations::take_index_vector(std::string directive, int k)
 
 std::string Configurations::get_absolut() 
 {
-   char buff[40];
-   getcwd(buff, 40);
+   char buff[150];
+   getcwd(buff, 150);
    std::string cwd(buff);
    return cwd;
 }
@@ -330,7 +330,6 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	if (name == "root")
 	{
 		loc.root = serv.root + directive;
-		std::cout << loc.root << std::endl;
 		if (!check_string(directive, 0))
 			err_message("Bad parameter, directive's name: root / location");
 	}
@@ -370,6 +369,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	{
 		std::string cgi_ext = get_cgi_ext(directive);
 		std::string cgi_path = get_the_path(directive);
+		// std::cout << cgi_path << " --- " << cgi_ext << std::endl;
 		if (cgi_ext.length() && cgi_path.length())
 			loc.cgi_map[cgi_path] = cgi_ext;
 	}
