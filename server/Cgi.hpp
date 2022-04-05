@@ -87,7 +87,8 @@ class Cgi
 
 		bool	run() {
 
-			std::cout << " [🏗️] Running cgi Script: " << _file_path << "\n";
+			std::cout << " [🏗️] Running cgi Script: "
+				<< YELLOW << _file_path << EOC;
 			pid_t	bin_pid = fork();
 			if (bin_pid < 0) {
 				std::cerr << "fork() failed\n";
@@ -133,8 +134,10 @@ class Cgi
 				const_cast<char*>(_file_path.c_str()), 0 // why
 			};
 
-			if (execve(argv[0], argv, _dump_env()) == -1)
+			if (execve(argv[0], argv, _dump_env()) == -1) {
+				std::cerr << "bad execve\n";
 				exit(EXIT_FAILURE); //mem leak but ok cause exit (_exit ?)
+			}
 		}
 		char	**_dump_env() {
 			char **ret = (char**)malloc(sizeof(char*) * (_env.size() + 1));
@@ -190,6 +193,7 @@ class Cgi
 			std::string data((std::istreambuf_iterator<char>(file)),
 					std::istreambuf_iterator<char>());
 			file.close();
+//			std::cout << "DATA: \n" << data << "\n ---------------\n";
 			return (_parse_response(data));
 		}
 
@@ -203,24 +207,22 @@ class Cgi
 			_body = data.substr(sep_pos + 4); /* after \r\n\r\n is body */
 
 			size_t nl_pos = 0;
-			while ((sep_pos = headers.find(": ", nl_pos)) != std::string::npos) {
-
-				sep_pos -= nl_pos;
-				std::string const key = headers.substr(nl_pos, sep_pos); //need ?
-				size_t tmp = headers.find("\r", nl_pos); //"\n\r"
+			while (1) {
+				size_t tmp = headers.find("\r", nl_pos); //"\n\rj
+				if (tmp == std::string::npos)
+					break ;
+				sep_pos = headers.find(":", nl_pos);
+				std::string const key = headers.substr(nl_pos, sep_pos - nl_pos);
 				std::string const value =
-					headers.substr(sep_pos + 2, tmp - nl_pos);
+					headers.substr(sep_pos + 2, tmp - (nl_pos + key.size() + 1));
+				/*
 				//// DEBUG ///
 				std::cout << "key: " << key << "\n";
 				std::cout << "value: " << value << "\n";
 				///////
+				*/
 				_headers.insert(HeaderPair(key, value));
 				nl_pos = tmp + 2;
-				if (nl_pos >= headers.size()) {
-					std::cout << "nice break: _parse_response()\n";
-					break;
-				}
-				//headers = headers.substr(nl_pos + 2);
 			}
 			return (true);
 		}

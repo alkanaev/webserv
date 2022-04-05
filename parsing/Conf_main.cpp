@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/05 15:49:24 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/05 16:29:47 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -369,9 +369,9 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	{
 		std::string cgi_ext = get_cgi_ext(directive);
 		std::string cgi_path = get_the_path(directive);
-		// std::cout << cgi_path << " --- " << cgi_ext << std::endl;
+//		 std::cout << "in parsing: " << cgi_path << " --- " << cgi_ext << std::endl;
 		if (cgi_ext.length() && cgi_path.length())
-			loc.cgi_map[cgi_path] = cgi_ext;
+			loc.cgi_map[cgi_ext] = cgi_path;
 	}
 }
 
