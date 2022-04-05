@@ -35,7 +35,10 @@ class Server: public ServerBlock
 			}
 
 		/* destructor */
-		~Server(){}
+		~Server(){
+			if (_fd != -1)
+				close(_fd);
+		}
 		/* getter */
 		int	get_fd() { return (_fd); }
 

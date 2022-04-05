@@ -33,6 +33,12 @@ class ServerBlock: protected Serv_block
 
 	/* destructor (TODO) */
 	virtual ~ServerBlock (){
+
+		for (VHostsObject::iterator it = _vhosts.begin(); it != _vhosts.end(); ++it)
+			delete it->second;
+		for (LocationObject::iterator it = locations.begin();
+				it != locations.end(); ++it)
+			delete it->second;
 		delete _defLoc;
 	}
 
