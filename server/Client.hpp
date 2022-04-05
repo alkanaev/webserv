@@ -118,9 +118,9 @@ class Client
 				else 
 					if (!_request->read_header())
 						return (READ_OK);
-			}
 			std::cout << " [🐱]: " << CYAN << get_ip() << EOCC
 				<< asked[_request->get_method()] << "\n";
+			}
 			if (_request->get_method() == _POST && !_request->read_body())
 				return (READ_WAIT);
 #ifdef DEBUG

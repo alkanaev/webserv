@@ -391,7 +391,7 @@ class Response
 			return (false);
 		}
 
-		std::cout << " [🤰] Creating: " << path << "\n";
+		std::cout << " [🤰] Creating: " << YELLOW << path << EOC;
 		std::ofstream _out(path.c_str());
 		if (!_out) {
 			_status = INTERNAL_SERVER_ERROR;
