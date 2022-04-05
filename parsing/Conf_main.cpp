@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/04 21:32:25 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/05 15:49:24 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,7 +203,7 @@ std::map<int,std::string> Configurations::take_error_pages(std::string directive
 		err_message("Bad parameter, directive's name: error_page");
 	}
 	else
-		serv.error_page[get_err_num(directive)] = get_the_path(directive);
+		serv.error_page[get_err_num(directive)] = get_absolut() + get_the_path(directive);
 	return serv.error_page;
 }
 
