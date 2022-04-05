@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/05 16:29:47 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/05 19:31:58 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -358,7 +358,25 @@ void Configurations::take_location_directives(std::string name, std::string dire
 	else if (name == "auth_basic_user_file") 
 		loc.auth_basic_user_file = directive;
 	else if (name == "client_max_body_size")
-		loc.client_max_body_size = ft_stoi_unsign(directive);
+	{
+		std::string::const_iterator it = directive.begin();
+		while (it != directive.end() && std::isdigit(*it))
+			++it;
+		if ((!directive.empty() && it == directive.end()))
+			loc.client_max_body_size = ft_stoi_unsign(directive);
+
+		if ((it != directive.end()) && (next(it) == directive.end()))
+		{
+			char check = directive.back();
+			if (check == 'M')
+			{
+				directive.pop_back();
+				loc.client_max_body_size = ft_stoi_unsign(directive.append("000000"));
+			}
+			else
+				err_message("Bad parameter, value of client_max_body_size isn't valid");
+		}
+	}
 	else if (name == "upload_pass")
 	{
 		loc.upload_pass = serv.root + directive;

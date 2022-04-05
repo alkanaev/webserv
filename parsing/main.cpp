@@ -14,8 +14,8 @@ int main(int ac, char **av)
 		exit(1);
 	}
 	config.work(file);
-	// if (config.error_found())
-	// 	std::
+	// if (!config.error_found())
+	// 	config.print_parsed();
 	// 	config.print_parsed();
 #ifdef DEBUG
 	print_parsed();
