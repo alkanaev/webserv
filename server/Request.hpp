@@ -152,7 +152,7 @@ class Request
 
 	bool	read_body() {
 		if (_status & CHUNKED) {
-			//std::cout << "READ CHUNKED\n";
+			std::cout << "READ CHUNKED\n";
 			if (_read_chunks() == READ_WAIT)
 				return (false);
 			_body_size = _raw.size();
@@ -160,6 +160,8 @@ class Request
 //			_status |= BODY_READY; // ? not used
 			return (true);
 		}
+		std::cout << " [📚] readed: " << GREEN
+			<< _raw.size() << EOCC << " / " << BLUE << _body_size << EOC;
 		if (_raw.size() < _body_size) // not enought
 			return (false);
 //		_status |= BODY_READY; //not used

@@ -333,6 +333,7 @@ class Response
 			std::string const
 				content_type = _request->get_header_field("content-type");
 			if (content_type == "") {
+				std::cout << "[🦀] raw uploading...\n";
 				_create_file(path, _request->get_raw());
 				return ;
 			}
@@ -351,6 +352,7 @@ class Response
 		size_t start = line + 2;
 		line = body.find("\r\n", start);
 
+		std::cout << " [🦚] uploading... \n";
 		while (line != std::string::npos) {
 
 			std::string const content_disposition = body.substr(start, line);

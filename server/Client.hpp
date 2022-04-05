@@ -110,7 +110,7 @@ class Client
 	private: 
 		/* private functions */
 		READ	_read_status() {
-			static std::string const asked[] = { " [🧡] GET", " [💙] POST", " [💔] DELET", " [👽] UNSUPORTED"};
+			static std::string const asked[] = { " [🧡] GET", " [💙] POST", " [💔] DELETE", " [👽] UNSUPORTED"};
 
 			if (!_request->header_ready()) {
 				if (!_request->have_read_enought())
