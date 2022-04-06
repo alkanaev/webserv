@@ -133,7 +133,9 @@ class Request
 		}
 
 		bool	read_header() {
+#ifdef DEBUG
 			std::cout << _raw << "\n";
+#endif
 			if (!_extract_method())
 				return (false);
 			if (!_extract_uri())
@@ -153,7 +155,6 @@ class Request
 
 	bool	read_body() {
 		if (_status & CHUNKED) {
-			std::cout << "READ CHUNKED\n";
 			if (_read_chunks() == READ_WAIT)
 				return (false);
 			_body_size = _raw.size();
@@ -346,7 +347,9 @@ class Request
 				const size_t chunk_size_info = _raw.find("\r\n");
 				const int64_t chunk_size = strtol(
 						_raw.substr(0, chunk_size_info).c_str(), NULL, 16);
-//				_raw_request.erase(0, header_end + 2);
+				std::cout << "[🔪] Chunking: " << GREEN
+					<< "(" << chunk_size << ")" << EOCC << "total: " << BLUE
+					<< "(" << body.size() << ")" << EOC;
 				if (chunk_size == 0) {
 					_raw = body;
 					return (READ_OK);
@@ -367,7 +370,6 @@ class Request
 
 	/* for POST method */
 	bool	_validate_post() {
-		std::cout << "valid post\n";
 		Headers::const_iterator it = _headers.find("transfer-encoding");
 		if (it != _headers.end() &&
 				it->second.find("chunked") != std::string::npos) {

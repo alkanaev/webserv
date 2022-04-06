@@ -24,9 +24,15 @@ int main ( int ac, char ** av )
 	struct timespec timeout;
 	timeout.tv_sec = 1;
 	timeout.tv_nsec = 0;
-	std::cout << "\n--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n";
-	std::cout << "         🪐    WEEBSERV   🚀           \n";
-	std::cout << "--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n\n";
+	std::cout << YELLOW << "  Alkanaev"<< EOC << BLUE << "    abaudot" << EOC
+		<< RED << "      Present:"<< EOC;
+
+	std::cout << GREEN;
+	std::cout << "\n--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--" << EOC;
+	std::cout << "      🌍      WEEBSERV      🚀          \n";
+	std::cout << "                 |                      \n";
+	std::cout << "             for MacOs 🍏 ...           \n" << CYAN;
+	std::cout << "--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n" << EOC;
 	/* Event handler */
 	Events events(&timeout);
 	try {

@@ -23,7 +23,7 @@
 # include <sstream> /*stringstream*/
 # include <fstream> /* offstream ifstream */
 
-# define _CGI_TIMEOUT		1
+# define _CGI_TIMEOUT		5
 # define _CGI_TICKS_US		100
 
 class Cgi
@@ -135,7 +135,7 @@ class Cgi
 			};
 
 			if (execve(argv[0], argv, _dump_env()) == -1) {
-				std::cerr << "bad execve\n";
+				std::cerr << " bad execve\n";
 				exit(EXIT_FAILURE); //mem leak but ok cause exit (_exit ?)
 			}
 		}

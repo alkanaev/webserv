@@ -453,7 +453,7 @@ class Response
 			return;
 		errno = 0;
 
-		std::cout << " [👾] Deleting: " << path << "\n";
+		std::cout << " [👾] Deleting: " << YELLOW << path << EOC;
 		if (remove(path.c_str()) != -1) {
 			_status = NO_CONTENT;
 			return ;
