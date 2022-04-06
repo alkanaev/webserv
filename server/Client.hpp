@@ -118,6 +118,7 @@ class Client
 				else 
 					if (!_request->read_header())
 						return (READ_OK);
+			// std::cou << _request->read_body() << std::endl;
 			std::cout << " [🐱]: " << CYAN << get_ip() << EOCC
 				<< asked[_request->get_method()] << "\n";
 			}

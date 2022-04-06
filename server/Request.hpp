@@ -133,6 +133,7 @@ class Request
 		}
 
 		bool	read_header() {
+			std::cout << _raw << std::endl;
 			if (!_extract_method())
 				return (false);
 			if (!_extract_uri())
