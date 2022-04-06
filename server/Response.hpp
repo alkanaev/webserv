@@ -330,13 +330,13 @@ class Response
 				_status = FORBIDDEN;
 				return ;
 			}
-			std::string const
-				content_type = _request->get_header_field("content-type");
-			if (content_type == "") {
+			if (_request->get_form() == _PLAINTXT) {
 				std::cout << "[🦀] raw uploading...\n";
 				_create_file(path, _request->get_raw());
 				return ;
 			}
+			std::string const
+				content_type = _request->get_header_field("content-type");
 			if (_request->get_form() == _MULTIPART)
 				return (_multipart_upload(path,
 							content_type.substr(content_type.find("=") + 1)));

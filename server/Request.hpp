@@ -133,7 +133,7 @@ class Request
 		}
 
 		bool	read_header() {
-			std::cout << _raw << std::endl;
+			std::cout << _raw << "\n";
 			if (!_extract_method())
 				return (false);
 			if (!_extract_uri())
@@ -367,6 +367,7 @@ class Request
 
 	/* for POST method */
 	bool	_validate_post() {
+		std::cout << "valid post\n";
 		Headers::const_iterator it = _headers.find("transfer-encoding");
 		if (it != _headers.end() &&
 				it->second.find("chunked") != std::string::npos) {
@@ -384,6 +385,8 @@ class Request
 			_form = _MULTIPART;
 		else  if (it->second.find("application/x-www-form-urlencoded") != std::string::npos)
 			_form = _URLENCODED;
+		else
+			_form = _PLAINTXT;
 		return (true);
 	}
 

@@ -43,6 +43,7 @@ enum READ {
 enum FORM {
 	_URLENCODED,
 	_MULTIPART,
+	_PLAINTXT,
 	FORM_UNKNOWN
 };
 
