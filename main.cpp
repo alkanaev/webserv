@@ -13,35 +13,50 @@ int main ( int ac, char ** av )
 {
 	/* configuration */
 	std::vector<ServerBlock*> _servers;
+
 	try {
 		Configurations config(ac, av); /* lauch parsing */
 		_servers = config.get_server();
 	} catch (std::exception &e) {
-		std::cerr << "Fatal: " << e.what() << "\n";
+		std::cerr << RED << "Fatal: " << EOCC << e.what() << "\n";
 		return (1);
 	}
-	/* utility */
-	struct timespec timeout;
-	timeout.tv_sec = 1;
-	timeout.tv_nsec = 0;
-	std::cout << YELLOW << "  Alkanaev"<< EOC << BLUE << "    abaudot" << EOC
-		<< RED << "      Present:"<< EOC;
+
+
+	/* presentation */
+	std::cout << "\n" << YELLOW << "  Alkanaev"<< EOC << BLUE << "    abaudot" << EOC
+		<< RED << "\n              PRESENT:"<< EOC << "\n";
 
 	std::cout << GREEN;
+	std::cout << "    /                           \\\n";
+	std::cout << "   /                             \\\n";
+	std::cout << "  /                               \\\n";
+	std::cout << " /                                 \\\n";
+	std::cout << "/                                   \\";
 	std::cout << "\n--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--" << EOC;
 	std::cout << "      🌍      WEEBSERV      🚀          \n";
 	std::cout << "                 |                      \n";
 	std::cout << "             for MacOs 🍏 ...           \n" << CYAN;
-	std::cout << "--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n" << EOC;
+	std::cout << "--~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~--\n";
+	std::cout << "\\                                   /\n";
+	std::cout << " \\                                 /\n";
+	std::cout << "  \\                               /\n";
+	std::cout << "   \\                             /\n";
+	std::cout << "    \\                           /" << EOC << "\n";;
+
+	/* utility */
+	struct timespec timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_nsec = 0;
+
 	/* Event handler */
 	Events events(&timeout);
 	try {
 		events.init(_servers);
 		events.run(); /* server loop in there */
 	} catch (std::exception &e) {
-		std::cerr << "fatal: " << e.what() << "\n";
+		std::cerr << RED << "Fatal: " << EOCC << e.what() << "\n";
 		return (1);
 	}
     return (0); /* bravo */
 }
-
