@@ -133,9 +133,9 @@ class Request
 		}
 
 		bool	read_header() {
-#ifdef DEBUG
+// #ifdef DEBUG
 			std::cout << _raw << "\n";
-#endif
+// #endif
 			if (!_extract_method())
 				return (false);
 			if (!_extract_uri())
