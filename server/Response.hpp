@@ -86,6 +86,7 @@ class Response
 	void	_construct_body () {
 		const LocationBlock  *lblock = _server->get_lockBlock(
 				_request->get_host(), _request->get_uri());
+
 		if (lblock->get_body_limit() < _request->get_raw().size()) {
 			_status = PAYLOAD_TOO_LARGE;
 			return ;

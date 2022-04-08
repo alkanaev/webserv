@@ -133,9 +133,9 @@ class Request
 		}
 
 		bool	read_header() {
-// #ifdef DEBUG
+#ifdef DEBUG
 			std::cout << _raw << "\n";
-// #endif
+#endif
 			if (!_extract_method())
 				return (false);
 			if (!_extract_uri())
@@ -296,13 +296,11 @@ class Request
 		return (s);
 	}
 
-	/*
 	static std::string* _trim(std::string *s, const char *t = " \t") {
 		s->erase(s->find_last_not_of(t) + 1);
 		s->erase(0, s->find_first_not_of(t));
 		return (s);
 	}
-	*/
 
 	/* Connection: keep-alive */
 	/* ... */
@@ -322,7 +320,7 @@ class Request
 			_strtolower(&header_name);
 			//if (header_name != "cookie")
 			//_strtolower(&header_value); //maybe not
-	//		_trim(&header_value);
+			_trim(&header_value);
 			_headers[header_name] = header_value;
 			if (header_name == "host")
 				_host = header_value;

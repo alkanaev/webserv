@@ -34,11 +34,13 @@ class ServerBlock: protected Serv_block
 	/* destructor (TODO) */
 	virtual ~ServerBlock (){
 
+		/*
 		for (VHostsObject::iterator it = _vhosts.begin(); it != _vhosts.end(); ++it)
 			delete it->second;
 		for (LocationObject::iterator it = locations.begin();
 				it != locations.end(); ++it)
 			delete it->second;
+			*/
 		delete _defLoc;
 	}
 
@@ -95,8 +97,7 @@ class ServerBlock: protected Serv_block
 
 	void absorb( ServerBlock *lhs ) {
 		std::string name = lhs->get_name();
-		_vhosts.insert(std::pair<std::string, ServerBlock *>(
-					_strtolower(name), lhs));
+		_vhosts[name] = lhs;
 	}
 
 	private: /* methodes */
