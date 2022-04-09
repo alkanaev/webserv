@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/09 11:33:03 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/09 14:26:19 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -498,7 +498,7 @@ void Configurations::work(std::string file)
 			take_location_part();
 	}
 	if (error_found() == 1) 
-		std::cout << "[💥] The configuration file is not accepted !!!" << std::endl;
+		std::cout << "[💥] The configuration file is " << RED "not accepted !!!" << EOC;
 	else 
-		std::cout << " [☀️ ] The configuration file is accepted !\n";
+		std::cout << " [☀️ ] The configuration file is " << CYAN << "accepted !" << EOC;
 }
