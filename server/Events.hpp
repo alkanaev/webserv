@@ -42,8 +42,9 @@ class Events
 		event_fd(-1){}
 
 	~Events () {
-		for (ServerObject::iterator it = _vhost.begin(); it != _vhost.end(); ++it)
-			delete it->second;
+		/* no need to free the servers here they will be freed by std::vect */
+//		for (ServerObject::iterator it = _vhost.begin(); it != _vhost.end(); ++it)
+//			delete it->second;
 		for (ClientObject::iterator it =  _clients.begin(); it != _clients.end(); ++it)
 			delete it->second;
 		if (event_fd != -1)

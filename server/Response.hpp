@@ -62,6 +62,8 @@ class Response
 		if (_request && _status < BAD_REQUEST)
 			_construct_body();
 		if (_status >= BAD_REQUEST) {
+			std::cout << " [🙈] " << RED << "Error: "
+				<< EOCC << _resolve_code(_status) << "\n";
 			if (_request) {
 				std::string path = _server->get_error_page(_status,
 						_request->get_host());
@@ -392,13 +394,15 @@ class Response
 			return (false);
 		}
 
-		std::cout << " [🤰] Creating: " << YELLOW << path << EOC;
 		std::ofstream _out(path.c_str());
 		if (!_out) {
 			_status = INTERNAL_SERVER_ERROR;
 			return (false);
 		}
+
+		std::cout << " [🤰] Creating: " << YELLOW << path << EOC;
   		_out << content;
+
 		if (_out.bad()) {
 			_status = INTERNAL_SERVER_ERROR;
 			return (false);
@@ -454,7 +458,6 @@ class Response
 			return;
 		errno = 0;
 
-		std::cout << " [👾] Deleting: " << YELLOW << path << EOC;
 		if (remove(path.c_str()) != -1) {
 			_status = NO_CONTENT;
 			return ;
@@ -466,6 +469,7 @@ class Response
 			_status = FORBIDDEN;
 		else
 			_status = INTERNAL_SERVER_ERROR;
+		std::cout << " [👾] Deleting: " << YELLOW << path << EOC;
 	}
 	/* ------------------------------ */
 

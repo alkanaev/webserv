@@ -72,9 +72,9 @@ class Request
 
 	public:
 		/* constructor */
-		explicit Request ( std::string const &buffer ):
+		explicit Request ( char const *buffer, int const n ):
 		_headers(),
-		_raw(buffer),
+		_raw(buffer, buffer + n),
 		_host(),
 		_uri(),
 //		_version(),
@@ -128,8 +128,8 @@ class Request
 		FORM	get_form() const { return _form; };
 
 		/* methods */
-		void	add_buffer( std::string const &buffer ) {
-			_raw += buffer;
+		void	add_buffer( char const *buffer, int const size ) {
+			_raw.insert(_raw.size(), buffer, size);
 		}
 
 		bool	read_header() {

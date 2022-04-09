@@ -8,7 +8,7 @@ NAME=ruServ
 
 CC=clang++
 INCLUDES= -I block -I parsing -I server
-CFLAGS= -std=c++98 -Wall -Werror -Wextra -g3 #debug
+CFLAGS= -std=c++98 -Wall -Werror -Wextra -O2#-g3 -fsanitize=address#debug
 
 OBJ = main.o parsing/Conf_main.o parsing/Conf_checkers.o parsing/Conf_tools.o parsing/Conf_init.o parsing/Conf_print.o server/Response.o
 

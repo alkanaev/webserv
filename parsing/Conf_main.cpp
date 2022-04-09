@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/06 19:38:45 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/09 11:33:03 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -452,8 +452,6 @@ void Configurations::take_location_part()
 	{
 		location_block = 0;
 		serv.locations[loc.path] = new LocationBlock(loc);
-		// all the nex loc struct we push to serv.location
-		//serv.location.push_back(loc); no need anymore
 	}
 	else 
 	{

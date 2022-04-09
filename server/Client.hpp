@@ -84,12 +84,11 @@ class Client
 			} else if (!n)
 				return (READ_EOF);
 			else {
-				buffer[n] = 0;
 				if (!_request) {
-					_request = new Request(buffer);
+					_request = new Request(buffer, n);
 					gettimeofday(&_ping, NULL); //maybe
 				} else 
-					_request->add_buffer(buffer);
+					_request->add_buffer(buffer, n);
 				return (_read_status());
 			}
 		}

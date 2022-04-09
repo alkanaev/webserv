@@ -8,7 +8,6 @@
 # include "Events.hpp"
 # include "Config.hpp"
 
-
 int main ( int ac, char ** av )
 {
 	/* configuration */
@@ -21,7 +20,6 @@ int main ( int ac, char ** av )
 		std::cerr << RED << "Fatal: " << EOCC << e.what() << "\n";
 		return (1);
 	}
-
 
 	/* presentation */
 	std::cout << "\n" << YELLOW << "  Alkanaev"<< EOC << BLUE << "    abaudot" << EOC

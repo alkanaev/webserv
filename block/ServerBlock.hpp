@@ -32,15 +32,15 @@ class ServerBlock: protected Serv_block
 	//default location
 
 	/* destructor (TODO) */
-	virtual ~ServerBlock (){
+	virtual ~ServerBlock () {
 
-		/*
+		for (LocationObject::iterator it = locations.begin();
+				it != locations.end(); ++it) {
+			std::cout << "--\n";
+			delete it->second;
+		}
 		for (VHostsObject::iterator it = _vhosts.begin(); it != _vhosts.end(); ++it)
 			delete it->second;
-		for (LocationObject::iterator it = locations.begin();
-				it != locations.end(); ++it)
-			delete it->second;
-			*/
 		delete _defLoc;
 	}
 
