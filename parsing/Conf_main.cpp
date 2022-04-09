@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:17 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/09 14:26:19 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/09 15:58:46 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,6 +257,8 @@ void Configurations::take_server_directives(std::string name , std::string direc
 {
 	if (name == "listen") 
 	{
+		if (!serv._listen.empty())
+			err_message("Only one listen-directve per server is allowed");
 		get_ip(directive);
 		serv._listen = directive;
 	} 
@@ -396,6 +398,7 @@ void Configurations::take_location_directives(std::string name, std::string dire
 void Configurations::config_part() {
 	int searching_checker = 0;
 	serv_init();
+	
 	for(std::vector<std::string>::iterator itc = directives_config.begin(); itc != directives_config.end(); itc++) 
 	{
 		if (p_config.find(*itc) == 0) {
@@ -403,7 +406,7 @@ void Configurations::config_part() {
 				server_block = 1;
 				searching_checker = 1;
 				break;
-			}	
+			}
 		}
 	}
 	if (!searching_checker) 
