@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/07 11:25:22 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/09 13:39:52 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,7 @@ class Configurations
 		/* method */
 
 		void _handle_vhost() {
-			if (server.size() == 0)
+	
 				return ;
 			std::vector<ServerBlock*>::const_iterator it = server.begin();
 			for (; it != server.end(); ++it) {
@@ -117,6 +117,8 @@ class Configurations
 				for (; it2 != server.end(); it2++) {
 					if ((*it)->get_port() == (*it2)->get_port() &&
 							(*it)->get_ip() == (*it2)->get_ip()) {
+						if ((*it)->get_name() == (*it2)->get_name())
+							throw std::invalid_argument("Bad Configuration File");
 						(*it)->absorb(*it2);
 						//delete (*it2);
 						server.erase(it2);

@@ -132,11 +132,13 @@ class ServerBlock: protected Serv_block
 	}
 
 	/* remove one day... cleaning */
+	/*
 	std::string &_strtolower( std::string &s ) {
 		for (std::string::iterator it = s.begin(); it != s.end(); it++)
 			*it = std::tolower(*it);
 		return (s);
 	}
+	*/
 };
 
 #endif /* end of include guard SERVERBLOCK_HPP */
