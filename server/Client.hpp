@@ -79,7 +79,7 @@ class Client
 
 			ssize_t n = recv(_fd, buffer, CLIENT_BUFFER_SIZE, 0);
 			if (n == -1) {
-				std::cerr << "recv(): failed\n";
+				std::cerr << " recv(): failed\n";
 				return (READ_ERROR);
 			} else if (!n)
 				return (READ_EOF);

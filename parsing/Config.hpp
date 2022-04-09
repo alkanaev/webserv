@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/09 14:20:35 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/09 14:35:59 by abaudot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,9 @@ class Configurations
 			if (ac != 2)
 				throw std::invalid_argument("**Plese, give a path to a config as argument**");
 			std::cout << "\n±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±\n";
-			std::cout << " [🏊] " << GREEN << "Parsing" << EOCC << " our .conf file...\n";
+			std::cout << " [🏊] " << GREEN << "Parsing \"" << EOCC
+				<< av[1] << GREEN << "\"" << EOCC << "...\n";
+			
 			work(av[1]);
 			if (error_found())
 				throw std::invalid_argument("Bad Configuration File");

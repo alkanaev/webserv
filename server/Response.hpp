@@ -63,6 +63,7 @@ class Response
 			_construct_body();
 		if (_status >= BAD_REQUEST) {
 			std::cout << " [🙈] " << RED << "Error: "
+				<< YELLOW << _status << ": "
 				<< EOCC << _resolve_code(_status) << "\n";
 			if (_request) {
 				std::string path = _server->get_error_page(_status,

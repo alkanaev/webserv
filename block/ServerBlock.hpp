@@ -129,7 +129,7 @@ class ServerBlock: protected Serv_block
 			std::cout << " [🚪] in: " << _uri << "\n";
 			return (it->second);
 		}
-		std::cout << " 🏔  staying on root\n";
+		std::cout << " 🏔  staying on " << BLUE "root" << EOC;
 		return (_defLoc); //change it for default_lockation :)
 	}
 
