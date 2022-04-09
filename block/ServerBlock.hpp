@@ -36,7 +36,6 @@ class ServerBlock: protected Serv_block
 
 		for (LocationObject::iterator it = locations.begin();
 				it != locations.end(); ++it) {
-			std::cout << "--\n";
 			delete it->second;
 		}
 		for (VHostsObject::iterator it = _vhosts.begin(); it != _vhosts.end(); ++it)
@@ -95,9 +94,12 @@ class ServerBlock: protected Serv_block
 		return (vhost->_get_lockBlock(uri));
 	}
 
-	void absorb( ServerBlock *lhs ) {
+	bool absorb( ServerBlock *lhs ) {
 		std::string name = lhs->get_name();
+		if (_vhosts.find(name) != _vhosts.end())
+			return (0);
 		_vhosts[name] = lhs;
+		return (1);
 	}
 
 	private: /* methodes */
