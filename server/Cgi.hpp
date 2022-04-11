@@ -74,7 +74,8 @@ class Cgi
 					Request::Headers const &head ) {
 				if (pipe(_fds) == -1)
 					return (false);
-				write(_fds[1], request.c_str(), request.size());
+				if (write(_fds[1], request.c_str(), request.size()) < 0)
+					return (false);
 				_env["CONTENT_LENGTH"] = _toString(request.size()); //
 				_out_fd = open(_out.c_str(),
 						O_RDWR | O_CREAT, S_IWRITE | S_IREAD);

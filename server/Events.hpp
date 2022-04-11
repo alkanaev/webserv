@@ -218,9 +218,11 @@ class Events
 			std::cerr << "_handle_clientWrite(): invalid fd\n";
 			return;
 		}
-
-		if (client->send_response())
-			return (_delete_client(ev_fd, client)); //maybe to much
+		int ret = client->send_response();
+		if (ret != READ_OK)
+			return ; //big GET
+		if (client->_close())
+			return (_delete_client(ev_fd, client));
 		_ev_switchState(ev_fd, 0);
 	}
 

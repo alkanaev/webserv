@@ -15,11 +15,12 @@
 
 # include "Cgi.hpp"
 # include "ServerBlock.hpp"
+# include "enum.hpp"
 
 
 # include <dirent.h> /* opendir */
 # include <sys/stat.h> /* stat function */
-
+# include <sys/socket.h> /* send */
 class Response
 {
 	typedef std::map<std::string, std::string>		Headers;
@@ -41,6 +42,7 @@ class Response
 	std::string _body;
 	std::string _page; //payload
 
+	size_t		_offset;
 	int			_status;
 
 	public:
@@ -48,6 +50,7 @@ class Response
 	Response ( ServerBlock *serv, Request *request ):
 		_server(serv),
 		_request(request),
+		_offset(0),
 		_status(request->get_code()){}
 
 	explicit Response ( int const code ):
@@ -76,13 +79,23 @@ class Response
 				_body = _generate_status_page(_status);
 			}
 		}
-		_page  = _construct_header() + _body + "\r\n";
+		_page  = _construct_header() + _body + "\r\n"; //mmmh
 	}
 
-	const char *get_response() const { return _page.c_str(); }
+	char const *get_response() const { return _page.data(); }
 
 	size_t	size() const { return _page.size(); }
+	bool	done() const { return (_offset == _page.size()); }
 
+	READ	send( const int fd ) {
+		char const *res = _page.data() + _offset;
+		ssize_t byte = ::send(fd, res, _page.size() - _offset, 0);
+		_offset += byte;
+		if (_offset == _page.size())
+			return (READ_OK);
+		return (READ_WAIT);
+	}
+		
 
 	private: /* private functions */
 
@@ -284,11 +297,14 @@ class Response
 
 		ssize_t n;
 		char buf[1024];
-		std::stringstream ss;
+		std::string ss;
+		/* n is checked */
 		while ((n = read(fd, buf, sizeof(buf))) > 0)
-			ss.write(buf, n);
+			ss.insert(ss.size(), buf, n);
 		close(fd);
-		return (ss.str());
+		if (n == -1)
+			_status = IM_A_TEAPOT;
+		return (ss);
 	}
 
 	void _do_redirection( LocationBlock const *lblock ) {
@@ -325,15 +341,17 @@ class Response
 		if (_cgi_pass(lblock))
 			return ;
 
-		_handle_upload(lblock, path);
+		_handle_upload(path);
 	}
 	void
-		_handle_upload( LocationBlock const *block, std::string const &path ) {
+		_handle_upload( std::string const &path ) {
 
-			if (block->get_upload_pass() == "") {
-				_status = FORBIDDEN;
-				return ;
+   			/*
+				if (block->get_upload_pass() == "") {
+					_status = FORBIDDEN;
+					return ;
 			}
+			*/
 			if (_request->get_form() == _PLAINTXT) {
 				std::cout << "[🦀] raw uploading...\n";
 				_create_file(path, _request->get_raw());

@@ -94,18 +94,27 @@ class Client
 		}
 
 		/* tmp */
-		bool	send_response() {
-			if (_response)
-				delete _response;
+		READ	send_response() {
+			if (_response) {
+				if (_response->done())
+					delete _response;
+				else
+					return (_response->send(_fd));
+			}
 			_response = new Response(_serv, _request); //not sure need to malloc
 			_response->build();
-			if (send(_fd, _response->get_response(), _response->size(), 0) == -1) {
-				std::cerr << "send(): failed\n";
-				return (true);
-			}
-			return (_close());
+			return (_response->send(_fd));
 		}
 
+		bool	_close() {
+			if (_request) {
+				bool state = _request->closed();
+				delete _request;
+				_request = 0;
+				return (state);
+			}
+			return (true);
+		}
 	private: 
 		/* private functions */
 		READ	_read_status() {
@@ -134,14 +143,5 @@ class Client
 			return (inet_ntoa(_addr.sin_addr));
 		}
 
-		bool	_close() {
-			if (_request) {
-				bool state = _request->closed();
-				delete _request;
-				_request = 0;
-				return (state);
-			}
-			return (true);
-		}
 };
 #endif /* end of include guard CLIENT_HPP */
