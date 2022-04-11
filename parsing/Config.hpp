@@ -6,7 +6,7 @@
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/27 12:45:20 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/09 14:35:59 by abaudot          ###   ########.fr       */
+/*   Updated: 2022/04/11 12:28:38 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,11 @@
 #include <fstream>
 #include <sstream>
 
+static bool emptyfile(std::ifstream& file)
+{
+    return file.peek() == std::ifstream::traits_type::eof();
+}
+
 class Configurations
 {
 	public:
@@ -28,7 +33,19 @@ class Configurations
 
 		Configurations( int ac, char **av ) {
 			if (ac != 2)
-				throw std::invalid_argument("**Plese, give a path to a config as argument**");
+				throw std::invalid_argument("**Please, give a path to a config as argument**");
+			std::string file;
+			if(ac == 2)
+			{
+				file = av[1];
+				std::ifstream fin(file);
+				std::ifstream filename(file);
+
+				if(!fin.is_open())
+					throw std::invalid_argument("\n**The configuration file is not valid**\n");
+				if(fin.fail() || emptyfile(filename))
+					throw std::invalid_argument("\n**The configuration file is empty**\n");
+			}
 			std::cout << "\n±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±\n";
 			std::cout << " [🏊] " << GREEN << "Parsing \"" << EOCC
 				<< av[1] << GREEN << "\"" << EOCC << "...\n";
