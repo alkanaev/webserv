@@ -25,9 +25,9 @@ int main(int ac, char **av)
 		std::ifstream filename(file);
 
 		if(!fin.is_open())
-			err_message("\n**The configuration file is not valid**\n");
+			config.err_message("\n**The configuration file is not valid**\n");
 		if(fin.fail() || emptyfile(filename))
-			err_message("\n**The configuration file is not valid**\n");
+			config.err_message("\n**The configuration file is not valid**\n");
 	}
 	else
 		close_it("\n**Please, give a path to a config as 2nd argument**\n");

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   conf_init.cpp                                      :+:      :+:    :+:   */
+/*   Conf_init.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alkanaev <alkanaev@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/03 18:08:40 by alkanaev          #+#    #+#             */
-/*   Updated: 2022/04/05 19:29:16 by alkanaev         ###   ########.fr       */
+/*   Updated: 2022/04/12 17:27:35 by alkanaev         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ void Configurations::serv_init()
 	serv.port = -1;
 	serv.server_name.clear();
 	serv.client_max_body_size = 100000000;
+	serv.locations.clear();
 }
 
 void Configurations::loc_init(int k)
